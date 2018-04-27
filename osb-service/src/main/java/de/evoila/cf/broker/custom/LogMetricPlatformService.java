@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Map;
 
 /**
@@ -27,6 +28,7 @@ public class LogMetricPlatformService implements PlatformService {
     private PlatformRepository platformRepository;
 
     @Override
+    @PostConstruct
     public void registerCustomPlatformService() {
         if(platformRepository != null) {
             platformRepository.addPlatform(Platform.EXISTING_SERVICE, this);

@@ -7,6 +7,7 @@ import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
@@ -18,6 +19,7 @@ import java.util.Map;
  * Created by reneschollmeyer, evoila on 26.04.18.
  */
 @Service
+@ConditionalOnBean(RedisBean.class)
 public class LogMetricBindingService extends BindingServiceImpl {
 
     private static final Logger log = LoggerFactory.getLogger(LogMetricBindingService.class);
