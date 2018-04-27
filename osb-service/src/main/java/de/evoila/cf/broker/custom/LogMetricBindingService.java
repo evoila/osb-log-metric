@@ -53,7 +53,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
             log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
             ", bindingId = " + bindingId);
         } else {
-            log.error("Application not registered!");
+            log.error("Error updating the subscription status for app = " + serviceInstanceBindingRequest.getAppGuid()
+                    + ". Application is not registered.");
         }
 
         ServiceInstanceBinding serviceInstanceBinding = new ServiceInstanceBinding(bindingId, serviceInstance.getId(), null, null);
@@ -69,7 +70,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
             log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
                     ", bindingId = " + binding.getId());
         } else {
-            log.error("Application not registered!");
+            log.error("Error updating the subscription status for app = " + binding.getAppGuid()
+                    + ". Application is not registered.");
         }
     }
 
