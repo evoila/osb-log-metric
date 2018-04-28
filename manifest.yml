@@ -2,13 +2,15 @@
 instances: 1
 timeout: 180
 memory: 1024M
-domain:
 applications:
-- name: osb-log-metric
-  host: osb-log-metric
-  path: target/osb-log-metric.jar
+- name: osb-log-metric-ng
+  host: osb-log-metric-ng
+  path: osb-service/target/osb-log-metric-1.2.0.jar
   buildpack: https://github.com/cloudfoundry/java-buildpack.git
   env:
-    CF_TARGET:
-    SPRING_PROFILES_ACTIVE: cloud
+    SPRING_APPLICATION_NAME: log-metric-ng
+    SPRING_PROFILES_ACTIVE: dev.eu-de-central
+    SPRING_CLOUD_CONFIG_URI: https://config-server.cf.dev.eu-de-central.msh.host
+    SPRING_CLOUD_CONFIG_USERNAME: admin
+    SPRING_CLOUD_CONFIG_PASSWORD: cloudfoundry
     JAVA_OPTS: -Djava.security.egd=file:/dev/urandom

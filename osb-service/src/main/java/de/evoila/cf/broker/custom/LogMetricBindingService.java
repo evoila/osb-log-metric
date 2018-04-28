@@ -29,11 +29,12 @@ public class LogMetricBindingService extends BindingServiceImpl {
     @Autowired
     private RedisBean redisBean;
 
-    @PostConstruct
-    private void init() {
+    private Jedis redisConnection() {
         jedis = new Jedis(redisBean.getHost(), redisBean.getPort());
         jedis.connect();
         jedis.auth(redisBean.getPassword());
+
+        return jedis;
     }
 
     @Override
@@ -47,7 +48,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
     @Override
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                  ServiceInstance serviceInstance, Plan plan) {
-        if(!jedis.get(serviceInstanceBindingRequest.getAppGuid()).isEmpty()) {
+        Jedis jedis = redisConnection();
+        if(jedis.get(serviceInstanceBindingRequest.getAppGuid()) == null) {
             jedis.set(serviceInstanceBindingRequest.getAppGuid(), "true");
 
             log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
@@ -64,6 +66,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     @Override
     protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
+        Jedis jedis = redisConnection();
+
         if(!jedis.get(binding.getAppGuid()).isEmpty()) {
             jedis.set(binding.getAppGuid(), "false");
 
