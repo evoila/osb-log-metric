@@ -11,7 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,11 +28,12 @@ public class LogMetricBindingService extends BindingServiceImpl {
     @Autowired
     private RedisBean redisBean;
 
-    @PostConstruct
-    private void init() {
+    private Jedis redisConnection() {
         jedis = new Jedis(redisBean.getHost(), redisBean.getPort());
         jedis.connect();
         jedis.auth(redisBean.getPassword());
+
+        return jedis;
     }
 
     @Override
@@ -47,7 +47,10 @@ public class LogMetricBindingService extends BindingServiceImpl {
     @Override
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                  ServiceInstance serviceInstance, Plan plan) {
-        if(!jedis.get(serviceInstanceBindingRequest.getAppGuid()).isEmpty()) {
+
+        Jedis jedis = redisConnection();
+
+        if(jedis.get(serviceInstanceBindingRequest.getAppGuid()) != null) {
             jedis.set(serviceInstanceBindingRequest.getAppGuid(), "true");
 
             log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
@@ -57,6 +60,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
                     + ". Application is not registered.");
         }
 
+        jedis.close();
+
         ServiceInstanceBinding serviceInstanceBinding = new ServiceInstanceBinding(bindingId, serviceInstance.getId(), null, null);
         serviceInstanceBinding.setAppGuid(serviceInstanceBindingRequest.getAppGuid());
         return serviceInstanceBinding;
@@ -64,7 +69,9 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     @Override
     protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
-        if(!jedis.get(binding.getAppGuid()).isEmpty()) {
+        Jedis jedis = redisConnection();
+
+        if(jedis.get(binding.getAppGuid()) != null) {
             jedis.set(binding.getAppGuid(), "false");
 
             log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
@@ -73,6 +80,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
             log.error("Error updating the subscription status for app = " + binding.getAppGuid()
                     + ". Application is not registered.");
         }
+
+        jedis.close();
     }
 
     @Override
