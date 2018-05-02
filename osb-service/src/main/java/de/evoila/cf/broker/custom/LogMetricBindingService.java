@@ -72,7 +72,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
         Jedis jedis = redisConnection();
 
         if(jedis.get(binding.getAppGuid()) != null) {
-            jedis.set(binding.getAppGuid(), "false");
+            jedis.del(binding.getAppGuid());
 
             log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
                     ", bindingId = " + binding.getId());
