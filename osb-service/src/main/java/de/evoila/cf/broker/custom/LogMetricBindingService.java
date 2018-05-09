@@ -11,7 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,8 +47,10 @@ public class LogMetricBindingService extends BindingServiceImpl {
     @Override
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                  ServiceInstance serviceInstance, Plan plan) {
+
         Jedis jedis = redisConnection();
-        if(jedis.get(serviceInstanceBindingRequest.getAppGuid()) == null) {
+
+        if(jedis.get(serviceInstanceBindingRequest.getAppGuid()) != null) {
             jedis.set(serviceInstanceBindingRequest.getAppGuid(), "true");
 
             log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
@@ -58,6 +59,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
             log.error("Error updating the subscription status for app = " + serviceInstanceBindingRequest.getAppGuid()
                     + ". Application is not registered.");
         }
+
+        jedis.close();
 
         ServiceInstanceBinding serviceInstanceBinding = new ServiceInstanceBinding(bindingId, serviceInstance.getId(), null, null);
         serviceInstanceBinding.setAppGuid(serviceInstanceBindingRequest.getAppGuid());
@@ -68,8 +71,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
     protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
         Jedis jedis = redisConnection();
 
-        if(!jedis.get(binding.getAppGuid()).isEmpty()) {
-            jedis.set(binding.getAppGuid(), "false");
+        if(jedis.get(binding.getAppGuid()) != null) {
+            jedis.del(binding.getAppGuid());
 
             log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
                     ", bindingId = " + binding.getId());
@@ -77,6 +80,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
             log.error("Error updating the subscription status for app = " + binding.getAppGuid()
                     + ". Application is not registered.");
         }
+
+        jedis.close();
     }
 
     @Override
