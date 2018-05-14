@@ -50,7 +50,7 @@ public class LogMetricPlatformService implements PlatformService {
     }
 
     @Override
-    public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, String> customParameters) throws PlatformException {
+    public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, Object> customParameters) throws PlatformException {
         serviceInstance = new ServiceInstance(serviceInstance, serviceInstance.getDashboardUrl(), serviceInstance.getId());
 
         return serviceInstance;
@@ -72,5 +72,5 @@ public class LogMetricPlatformService implements PlatformService {
     public void postDeleteInstance(ServiceInstance serviceInstance) throws PlatformException { }
 
     @Override
-    public ServiceInstance updateInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException { return serviceInstance; }
+    public ServiceInstance updateInstance(ServiceInstance serviceInstance, Plan plan, Map<String, Object> customParameters) throws PlatformException { return serviceInstance; }
 }
