@@ -1,9 +1,11 @@
 package de.evoila.cf.broker.custom;
 
 import de.evoila.cf.broker.bean.RedisBean;
+import de.evoila.cf.broker.connection.CFClientConnector;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
+import groovy.json.JsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +27,13 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     private Jedis jedis;
 
+    private JsonBuilder jsonBuilder;
+
     @Autowired
     private RedisBean redisBean;
+
+    @Autowired
+    private CFClientConnector cfClient;
 
     private Jedis redisConnection() {
         jedis = new Jedis(redisBean.getHost(), redisBean.getPort());
@@ -51,7 +58,9 @@ public class LogMetricBindingService extends BindingServiceImpl {
         Jedis jedis = redisConnection();
 
         if(jedis.get(serviceInstanceBindingRequest.getAppGuid()) != null) {
-            jedis.set(serviceInstanceBindingRequest.getAppGuid(), "true");
+            String redisJson = new JsonBuilder(new LogMetricRedisObject(cfClient.getServiceEnvironment(serviceInstanceBindingRequest.getAppGuid()), true)).toString();
+
+            jedis.set(serviceInstanceBindingRequest.getAppGuid(), redisJson);
 
             log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
             ", bindingId = " + bindingId);
