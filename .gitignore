@@ -28,3 +28,4 @@ ca.pem
 *.springWebflow
 osb-service/src/main/resources/static
 osb-service/src/main/resources/templates
+.idea/
