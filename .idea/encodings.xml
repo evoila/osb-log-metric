@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-backup-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-core/core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-core/model" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-dashboard" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-deployment" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-deployment/bosh" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-deployment/existing-service" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-deployment/openstack" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-persistence" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-persistence/persistence-mongo" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/osb-service" charset="UTF-8" />
+  </component>
+</project>
