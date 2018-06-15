@@ -25,7 +25,7 @@ import java.util.Map;
  * Created by reneschollmeyer, evoila on 17.05.18.
  */
 @RestController
-@RequestMapping(value = "/v2/service_instances")
+@RequestMapping(value = "/v2/manage")
 public class LogMetricBindingController {
 
     private static final String mapKey = "service_bindings";
@@ -44,7 +44,7 @@ public class LogMetricBindingController {
     @GetMapping(value = "/{instanceId}/service_bindings")
     public ResponseEntity<Map<String, List<LogMetricEnvironment>>> getServiceBindings(@PathVariable("instanceId") String instanceId) throws ServiceInstanceDoesNotExistException {
 
-        log.debug("GET: /v2/service_instances/{instanceId}/service_bindings"
+        log.debug("GET: /v2/manage/{instanceId}/service_bindings"
                 + ", getServiceBindings(), serviceInstanceId = " + instanceId);
 
         if(serviceInstanceRepository.containsServiceInstanceId(instanceId)) {
