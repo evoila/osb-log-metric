@@ -5,32 +5,32 @@ package de.evoila.cf.broker.model;
  */
 public class LogMetricEnvironment {
 
-    private String applicationName;
-    private String applicationId;
+    private String appName;
+    private String appId;
     private String space;
     private String organization;
 
-    public LogMetricEnvironment(String applicationName, String applicationId, String space, String organization) {
-        this.applicationName = applicationName;
-        this.applicationId = applicationId;
+    public LogMetricEnvironment(String appName, String appId, String space, String organization) {
+        this.appName = appName;
+        this.appId = appId;
         this.space = space;
         this.organization = organization;
     }
 
-    public String getApplicationName() {
-        return applicationName;
+    public String getAppName() {
+        return appName;
     }
 
-    public void setApplicationName(String applicationName) {
-        this.applicationName = applicationName;
+    public void setAppName(String appName) {
+        this.appName = appName;
     }
 
-    public String getApplicationId() {
-        return applicationId;
+    public String getAppId() {
+        return appId;
     }
 
-    public void setApplicationId(String applicationId) {
-        this.applicationId = applicationId;
+    public void setAppId(String appId) {
+        this.appId = appId;
     }
 
     public String getSpace() {

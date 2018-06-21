@@ -17,9 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by reneschollmeyer, evoila on 17.05.18.
@@ -42,18 +40,16 @@ public class LogMetricBindingController {
     private CFClientConnector cfClientConnector;
 
     @GetMapping(value = "/{instanceId}/service_bindings")
-    public ResponseEntity<Map<String, List<LogMetricEnvironment>>> getServiceBindings(@PathVariable("instanceId") String instanceId) throws ServiceInstanceDoesNotExistException {
+    public ResponseEntity<List<LogMetricEnvironment>> getServiceBindings(@PathVariable("instanceId") String instanceId) throws ServiceInstanceDoesNotExistException {
 
         log.debug("GET: /v2/manage/{instanceId}/service_bindings"
                 + ", getServiceBindings(), serviceInstanceId = " + instanceId);
 
         if(serviceInstanceRepository.containsServiceInstanceId(instanceId)) {
-            Map<String, List<LogMetricEnvironment>> appData = new HashMap<>();
-
-            appData.put(mapKey, new ArrayList<>());
+            List<LogMetricEnvironment> appData = new ArrayList<>();
 
             for(ServiceInstanceBinding serviceInstanceBinding: bindingRepository.getBindingsForServiceInstance(instanceId)) {
-                appData.get(mapKey).add(cfClientConnector.getServiceEnvironment(serviceInstanceBinding.getAppGuid()));
+                appData.add(cfClientConnector.getServiceEnvironment(serviceInstanceBinding.getAppGuid()));
             }
 
             return new ResponseEntity<>(appData, HttpStatus.OK);
