@@ -77,7 +77,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
     }
 
     @Override
-    protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
+    protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
         Jedis jedis = redisConnection();
 
         if(jedis.get(binding.getAppGuid()) != null) {
