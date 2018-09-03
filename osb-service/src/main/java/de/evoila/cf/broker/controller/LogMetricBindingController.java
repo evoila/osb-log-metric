@@ -26,8 +26,6 @@ import java.util.List;
 @RequestMapping(value = "/v2/manage")
 public class LogMetricBindingController {
 
-    private static final String mapKey = "service_bindings";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired

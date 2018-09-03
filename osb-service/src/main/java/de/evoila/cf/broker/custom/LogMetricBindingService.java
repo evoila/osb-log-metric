@@ -34,8 +34,6 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     private JedisCluster jedisCluster;
 
-    private JsonBuilder jsonBuilder;
-
     @Autowired
     private RedisBean redisBean;
 
