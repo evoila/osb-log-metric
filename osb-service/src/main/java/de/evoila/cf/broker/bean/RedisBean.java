@@ -3,6 +3,8 @@ package de.evoila.cf.broker.bean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * Created by reneschollmeyer, evoila on 26.04.18.
  */
@@ -10,16 +12,16 @@ import org.springframework.stereotype.Service;
 @ConfigurationProperties(prefix = "redis")
 public class RedisBean {
 
-    private String host;
+    private List<String> hosts;
     private int port;
     private String password;
 
-    public String getHost() {
-        return host;
+    public List<String> getHosts() {
+        return hosts;
     }
 
-    public void setHost(String host) {
-        this.host = host;
+    public void setHosts(List<String> hosts) {
+        this.hosts = hosts;
     }
 
     public int getPort() {
