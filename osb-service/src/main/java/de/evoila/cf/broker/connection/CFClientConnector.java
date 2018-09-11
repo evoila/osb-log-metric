@@ -24,11 +24,10 @@ public class CFClientConnector {
 
     private ReactorCloudFoundryClient cfClient;
 
-    @Autowired
     private CFClientBean cfClientBean;
 
-    @PostConstruct
-    private void init() {
+    public CFClientConnector(CFClientBean cfClientBean) {
+        this.cfClientBean = cfClientBean;
         cfClient = client();
     }
 
