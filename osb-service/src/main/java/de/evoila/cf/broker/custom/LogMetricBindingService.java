@@ -5,11 +5,12 @@ import de.evoila.cf.broker.connection.CFClientConnector;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.redis.RedisClientConnector;
+import de.evoila.cf.broker.repository.BindingRepository;
+import de.evoila.cf.broker.repository.ServiceInstanceRepository;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import groovy.json.JsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
@@ -25,14 +26,24 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     private static final Logger log = LoggerFactory.getLogger(LogMetricBindingService.class);
 
-    @Autowired
-    private RedisBean redisBean;
-
-    @Autowired
     private CFClientConnector cfClient;
 
-    @Autowired
-    private RedisClientConnector redisClientConnector;
+    private RedisClientConnector redisClient;
+
+    private Catalog catalog;
+
+    private ServiceInstanceRepository serviceInstanceRepository;
+
+    private BindingRepository bindingRepository;
+
+    public LogMetricBindingService(CFClientConnector cfClient, RedisClientConnector redisClient, Catalog catalog,
+                                   ServiceInstanceRepository serviceInstanceRepository, BindingRepository bindingRepository) {
+        this.cfClient = cfClient;
+        this.redisClient = redisClient;
+        this.catalog = catalog;
+        this.serviceInstanceRepository = serviceInstanceRepository;
+        this.bindingRepository = bindingRepository;
+    }
 
     @Override
     protected RouteBinding bindRoute(ServiceInstance serviceInstance, String route) {
@@ -46,10 +57,10 @@ public class LogMetricBindingService extends BindingServiceImpl {
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                  ServiceInstance serviceInstance, Plan plan) {
 
-        if(redisClientConnector.get(serviceInstanceBindingRequest.getAppGuid()) != null) {
+        if(redisClient.get(serviceInstanceBindingRequest.getAppGuid()) != null) {
             String redisJson = new JsonBuilder(new LogMetricRedisObject(cfClient.getServiceEnvironment(serviceInstanceBindingRequest.getAppGuid()), true)).toString();
 
-            redisClientConnector.set(serviceInstanceBindingRequest.getAppGuid(), redisJson);
+            redisClient.set(serviceInstanceBindingRequest.getAppGuid(), redisJson);
 
             log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
             ", bindingId = " + bindingId);
@@ -66,8 +77,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
     @Override
     protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
 
-        if(redisClientConnector.get(binding.getAppGuid()) != null) {
-            redisClientConnector.del(binding.getAppGuid());
+        if(redisClient.get(binding.getAppGuid()) != null) {
+            redisClient.del(binding.getAppGuid());
 
             log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
                     ", bindingId = " + binding.getId());
@@ -80,5 +91,19 @@ public class LogMetricBindingService extends BindingServiceImpl {
     @Override
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest, ServiceInstance serviceInstance, Plan plan, ServerAddress serverAddress) throws ServiceBrokerException {
         return new HashMap<>();
+    }
+
+    public void syncBindings() {
+        log.info("Synchronizing Service Bindings with Redis.");
+
+        catalog.getServices().forEach(serviceDefinition -> {
+            serviceInstanceRepository.getServiceInstancesByServiceDefinitionId(serviceDefinition.getId()).forEach(serviceInstance -> {
+                bindingRepository.getBindingsForServiceInstance(serviceInstance.getId()).forEach(binding -> {
+                    log.info("Found binding with bindingId = " + binding.getId() + ", synchronizing with Redis...");
+                    String redisJson = new JsonBuilder(new LogMetricRedisObject(cfClient.getServiceEnvironment(binding.getAppGuid()), true)).toString();
+                    redisClient.set(binding.getAppGuid(), redisJson);
+                });
+            });
+        });
     }
 }

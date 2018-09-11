@@ -2,7 +2,6 @@ package de.evoila.cf.broker.redis;
 
 import de.evoila.cf.broker.bean.RedisBean;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.HostAndPort;
@@ -27,8 +26,11 @@ public class RedisClientConnector {
 
     private JedisCluster jedisCluster;
 
-    @Autowired
     private RedisBean redisBean;
+
+    public RedisClientConnector(RedisBean redisBean) {
+        this.redisBean = redisBean;
+    }
 
     private Jedis redisSingleNodeConnection() {
         Jedis jedis = new Jedis(redisBean.getHosts().get(0), redisBean.getPort());

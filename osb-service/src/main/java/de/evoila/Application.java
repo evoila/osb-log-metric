@@ -3,6 +3,7 @@
  */
 package de.evoila;
 
+import de.evoila.cf.broker.custom.LogMetricBindingService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.ApplicationPidFileWriter;
@@ -36,5 +37,7 @@ public class Application {
 		ApplicationContext ctx = springApplication.run(args);
 
 		Assert.notNull(ctx);
+
+		ctx.getBean(LogMetricBindingService.class).syncBindings();
 	}
 }
