@@ -6,7 +6,10 @@ import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.redis.RedisClientConnector;
 import de.evoila.cf.broker.repository.BindingRepository;
+import de.evoila.cf.broker.repository.RouteBindingRepository;
+import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;
+import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import groovy.json.JsonBuilder;
 import org.slf4j.Logger;
@@ -37,13 +40,17 @@ public class LogMetricBindingService extends BindingServiceImpl {
     private BindingRepository bindingRepository;
 
     public LogMetricBindingService(CFClientConnector cfClient, RedisClientConnector redisClient, Catalog catalog,
-                                   ServiceInstanceRepository serviceInstanceRepository, BindingRepository bindingRepository) {
+                                   ServiceInstanceRepository serviceInstanceRepository, BindingRepository bindingRepository,
+                                   ServiceDefinitionRepository serviceDefinitionRepository, RouteBindingRepository routeBindingRepository,
+                                   HAProxyService haProxyService) {
+        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService);
         this.cfClient = cfClient;
         this.redisClient = redisClient;
         this.catalog = catalog;
         this.serviceInstanceRepository = serviceInstanceRepository;
         this.bindingRepository = bindingRepository;
     }
+
 
     @Override
     protected RouteBinding bindRoute(ServiceInstance serviceInstance, String route) {

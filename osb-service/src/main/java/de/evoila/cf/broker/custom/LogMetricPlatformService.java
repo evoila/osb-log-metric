@@ -1,8 +1,11 @@
 package de.evoila.cf.broker.custom;
 
+import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.repository.PlatformRepository;
+import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.existing.ExistingServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +23,10 @@ public class LogMetricPlatformService extends ExistingServiceFactory {
 
     private final Logger log = LoggerFactory.getLogger(LogMetricPlatformService.class);
 
+    public LogMetricPlatformService(PlatformRepository platformRepository, ServicePortAvailabilityVerifier portAvailabilityVerifier, ExistingEndpointBean existingEndpointBean) {
+        super(platformRepository, portAvailabilityVerifier, existingEndpointBean);
+    }
+
     @Override
     public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, Object> customParameters) throws PlatformException {
         serviceInstance = new ServiceInstance(serviceInstance, serviceInstance.getDashboardUrl(), serviceInstance.getId());
@@ -28,8 +35,11 @@ public class LogMetricPlatformService extends ExistingServiceFactory {
     }
 
     @Override
-    public ServiceInstance postCreateInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException { return serviceInstance; }
+    public ServiceInstance postCreateInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
+        return serviceInstance;
+    }
 
     @Override
-    public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException { }
+    public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
+    }
 }

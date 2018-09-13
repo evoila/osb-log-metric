@@ -8,7 +8,6 @@ import de.evoila.cf.broker.repository.BindingRepository;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,19 +22,22 @@ import java.util.List;
  * Created by reneschollmeyer, evoila on 17.05.18.
  */
 @RestController
-@RequestMapping(value = "/v2/manage")
+@RequestMapping(value = "/custom/v2/manage")
 public class LogMetricBindingController {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Autowired
     private BindingRepository bindingRepository;
 
-    @Autowired
     private ServiceInstanceRepository serviceInstanceRepository;
 
-    @Autowired
     private CFClientConnector cfClientConnector;
+
+    public LogMetricBindingController(BindingRepository bindingRepository, ServiceInstanceRepository serviceInstanceRepository, CFClientConnector cfClientConnector) {
+        this.bindingRepository = bindingRepository;
+        this.serviceInstanceRepository = serviceInstanceRepository;
+        this.cfClientConnector = cfClientConnector;
+    }
 
     @GetMapping(value = "/{instanceId}/service_bindings")
     public ResponseEntity<List<LogMetricEnvironment>> getServiceBindings(@PathVariable("instanceId") String instanceId) throws ServiceInstanceDoesNotExistException {
