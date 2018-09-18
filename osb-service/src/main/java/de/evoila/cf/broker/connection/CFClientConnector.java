@@ -4,6 +4,8 @@ import de.evoila.cf.broker.bean.CFClientBean;
 import de.evoila.cf.broker.model.LogMetricEnvironment;
 import org.cloudfoundry.client.v2.applications.SummaryApplicationRequest;
 import org.cloudfoundry.client.v2.applications.SummaryApplicationResponse;
+import org.cloudfoundry.client.v2.organizations.GetOrganizationRequest;
+import org.cloudfoundry.client.v2.organizations.GetOrganizationResponse;
 import org.cloudfoundry.client.v2.spaces.GetSpaceRequest;
 import org.cloudfoundry.client.v2.spaces.GetSpaceResponse;
 import org.cloudfoundry.reactor.DefaultConnectionContext;
@@ -60,6 +62,13 @@ public class CFClientConnector {
                         .build())
                 .block();
 
-        return new LogMetricEnvironment(applicationResponse.getName(), appId, spaceResponse.getEntity().getName(), spaceResponse.getEntity().getOrganizationId());
+        GetOrganizationResponse organizationResponse = cfClient.organizations()
+                .get(GetOrganizationRequest.builder()
+                    .organizationId(spaceResponse.getEntity().getOrganizationId())
+                    .build())
+                .block();
+
+        return new LogMetricEnvironment(applicationResponse.getName(), appId, spaceResponse.getEntity().getName(),
+                organizationResponse.getEntity().getName(), spaceResponse.getEntity().getOrganizationId());
     }
 }

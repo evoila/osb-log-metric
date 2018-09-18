@@ -8,12 +8,14 @@ public class LogMetricEnvironment {
     private String appName;
     private String appId;
     private String space;
+    private String organization;
     private String organization_guid;
 
-    public LogMetricEnvironment(String appName, String appId, String space, String organization_guid) {
+    public LogMetricEnvironment(String appName, String appId, String space, String organization, String organization_guid) {
         this.appName = appName;
         this.appId = appId;
         this.space = space;
+        this.organization = organization;
         this.organization_guid = organization_guid;
     }
 
@@ -39,6 +41,14 @@ public class LogMetricEnvironment {
 
     public void setSpace(String space) {
         this.space = space;
+    }
+
+    public String getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(String organization) {
+        this.organization = organization;
     }
 
     public String getOrganization_guid() {

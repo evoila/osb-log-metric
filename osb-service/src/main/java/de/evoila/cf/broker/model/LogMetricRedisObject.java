@@ -8,19 +8,22 @@ public class LogMetricRedisObject {
     private String applicationName;
     private String space;
     private String organization;
+    private String organization_guid;
     private boolean subscribed;
 
-    public LogMetricRedisObject(String applicationName, String space, String organization, boolean subscribed) {
+    public LogMetricRedisObject(String applicationName, String space, String organization, String organization_guid, boolean subscribed) {
         this.applicationName = applicationName;
         this.space = space;
         this.organization = organization;
+        this.organization_guid = organization_guid;
         this.subscribed = subscribed;
     }
 
     public LogMetricRedisObject(LogMetricEnvironment environment, boolean subscribed) {
         this.applicationName = environment.getAppName();
         this.space = environment.getSpace();
-        this.organization = environment.getOrganization_guid();
+        this.organization = environment.getOrganization();
+        this.organization_guid = environment.getOrganization_guid();
         this.subscribed = subscribed;
     }
 
@@ -46,6 +49,14 @@ public class LogMetricRedisObject {
 
     public void setOrganization(String organization) {
         this.organization = organization;
+    }
+
+    public String getOrganization_guid() {
+        return organization_guid;
+    }
+
+    public void setOrganization_guid(String organization_guid) {
+        this.organization_guid = organization_guid;
     }
 
     public boolean isSubscribed() {
