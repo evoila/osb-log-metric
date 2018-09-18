@@ -4,17 +4,12 @@ import de.evoila.cf.broker.bean.CFClientBean;
 import de.evoila.cf.broker.model.LogMetricEnvironment;
 import org.cloudfoundry.client.v2.applications.SummaryApplicationRequest;
 import org.cloudfoundry.client.v2.applications.SummaryApplicationResponse;
-import org.cloudfoundry.client.v2.organizations.GetOrganizationRequest;
-import org.cloudfoundry.client.v2.organizations.GetOrganizationResponse;
 import org.cloudfoundry.client.v2.spaces.GetSpaceRequest;
 import org.cloudfoundry.client.v2.spaces.GetSpaceResponse;
 import org.cloudfoundry.reactor.DefaultConnectionContext;
 import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
 import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
 
 /**
  * Created by reneschollmeyer, evoila on 30.05.18.
@@ -65,12 +60,6 @@ public class CFClientConnector {
                         .build())
                 .block();
 
-        GetOrganizationResponse organizationResponse = cfClient.organizations()
-                .get(GetOrganizationRequest.builder()
-                        .organizationId(spaceResponse.getEntity().getOrganizationId())
-                        .build())
-                .block();
-
-        return new LogMetricEnvironment(applicationResponse.getName(), appId, spaceResponse.getEntity().getName(), organizationResponse.getEntity().getName());
+        return new LogMetricEnvironment(applicationResponse.getName(), appId, spaceResponse.getEntity().getName(), spaceResponse.getEntity().getOrganizationId());
     }
 }

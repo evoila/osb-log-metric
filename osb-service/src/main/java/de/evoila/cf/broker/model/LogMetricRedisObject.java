@@ -20,7 +20,7 @@ public class LogMetricRedisObject {
     public LogMetricRedisObject(LogMetricEnvironment environment, boolean subscribed) {
         this.applicationName = environment.getAppName();
         this.space = environment.getSpace();
-        this.organization = environment.getOrganization();
+        this.organization = environment.getOrganization_guid();
         this.subscribed = subscribed;
     }
 
