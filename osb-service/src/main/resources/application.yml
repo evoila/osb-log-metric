@@ -7,6 +7,8 @@ spring:
       host: "${MONGODB_HOST}"
 haproxy:
   uri: "https://${SERVICE_KEY_MANAGER}/agents/${HAPROXY_AGENT_ID}/schemas?type=listen"
+redis:
+  pcfHosts: "${REDIS_HOSTS}"
 existing:
   endpoint:
     pcfHosts: "${HAPROXY_HOSTS}"
