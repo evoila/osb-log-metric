@@ -19,6 +19,14 @@ public class LogMetricEnvironment {
         this.organization_guid = organization_guid;
     }
 
+    public LogMetricEnvironment(String appId, LogMetricRedisObject logMetricRedisObject) {
+        this.appId = appId;
+        this.appName = logMetricRedisObject.getApplicationName();
+        this.space = logMetricRedisObject.getSpace();
+        this.organization = logMetricRedisObject.getOrganization();
+        this.organization_guid = logMetricRedisObject.getOrganization_guid();
+    }
+
     public String getAppName() {
         return appName;
     }

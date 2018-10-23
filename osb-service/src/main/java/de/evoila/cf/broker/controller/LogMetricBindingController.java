@@ -1,9 +1,11 @@
 package de.evoila.cf.broker.controller;
 
-import de.evoila.cf.broker.connection.CFClientConnector;
+import com.google.gson.Gson;
 import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.model.LogMetricEnvironment;
+import de.evoila.cf.broker.model.LogMetricRedisObject;
 import de.evoila.cf.broker.model.ServiceInstanceBinding;
+import de.evoila.cf.broker.redis.RedisClientConnector;
 import de.evoila.cf.broker.repository.BindingRepository;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;
 import org.slf4j.Logger;
@@ -31,12 +33,15 @@ public class LogMetricBindingController {
 
     private ServiceInstanceRepository serviceInstanceRepository;
 
-    private CFClientConnector cfClientConnector;
+    private RedisClientConnector redisClient;
 
-    public LogMetricBindingController(BindingRepository bindingRepository, ServiceInstanceRepository serviceInstanceRepository, CFClientConnector cfClientConnector) {
+    private Gson gson;
+
+    public LogMetricBindingController(BindingRepository bindingRepository, ServiceInstanceRepository serviceInstanceRepository, RedisClientConnector redisClient) {
         this.bindingRepository = bindingRepository;
         this.serviceInstanceRepository = serviceInstanceRepository;
-        this.cfClientConnector = cfClientConnector;
+        this.redisClient = redisClient;
+        gson = new Gson();
     }
 
     @GetMapping(value = "/{instanceId}/service_bindings")
@@ -49,7 +54,7 @@ public class LogMetricBindingController {
             List<LogMetricEnvironment> appData = new ArrayList<>();
 
             for(ServiceInstanceBinding serviceInstanceBinding: bindingRepository.getBindingsForServiceInstance(instanceId)) {
-                appData.add(cfClientConnector.getServiceEnvironment(serviceInstanceBinding.getAppGuid()));
+                 appData.add(new LogMetricEnvironment(serviceInstanceBinding.getAppGuid(), gson.fromJson(redisClient.get(serviceInstanceBinding.getAppGuid()), LogMetricRedisObject.class)));
             }
 
             return new ResponseEntity<>(appData, HttpStatus.OK);
