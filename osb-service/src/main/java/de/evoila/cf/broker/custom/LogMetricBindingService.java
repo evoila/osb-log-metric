@@ -1,7 +1,8 @@
 package de.evoila.cf.broker.custom;
 
-import de.evoila.cf.autoscaler.kafka.model.LogMetricBinding;
-import de.evoila.cf.autoscaler.kafka.producer.JsonProducer;
+import de.evoila.cf.autoscaler.kafka.KafkaPropertiesBean;
+import de.evoila.cf.autoscaler.kafka.model.BindingInformation;
+import de.evoila.cf.autoscaler.kafka.producer.KafkaJsonProducer;
 import de.evoila.cf.broker.bean.RedisBean;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
@@ -28,11 +29,11 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     private static final Logger log = LoggerFactory.getLogger(LogMetricBindingService.class);
 
-    private static final String BINDING_TOPIC = "bindings";
-
     private static final String BIND_ACTION = "bind";
 
     private static final String UNBIND_ACTION = "unbind";
+
+    private static final String SOURCE = "logMetric";
 
     private Catalog catalog;
 
@@ -40,16 +41,19 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     private BindingRepository bindingRepository;
 
-    private JsonProducer jsonProducer;
+    private KafkaJsonProducer kafkaJsonProducer;
+
+    private KafkaPropertiesBean kafkaPropertiesBean;
 
     public LogMetricBindingService(Catalog catalog, ServiceInstanceRepository serviceInstanceRepository, BindingRepository bindingRepository,
                                    ServiceDefinitionRepository serviceDefinitionRepository, RouteBindingRepository routeBindingRepository,
-                                   HAProxyService haProxyService, JsonProducer jsonProducer) {
+                                   HAProxyService haProxyService, KafkaJsonProducer kafkaJsonProducer, KafkaPropertiesBean kafkaPropertiesBean) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService);
         this.catalog = catalog;
         this.serviceInstanceRepository = serviceInstanceRepository;
         this.bindingRepository = bindingRepository;
-        this.jsonProducer = jsonProducer;
+        this.kafkaJsonProducer = kafkaJsonProducer;
+        this.kafkaPropertiesBean = kafkaPropertiesBean;
     }
 
 
@@ -65,9 +69,9 @@ public class LogMetricBindingService extends BindingServiceImpl {
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                  ServiceInstance serviceInstance, Plan plan) {
 
-        LogMetricBinding logMetricBinding = new LogMetricBinding(serviceInstanceBindingRequest.getAppGuid(), BIND_ACTION);
+        BindingInformation logMetricBinding = new BindingInformation(serviceInstanceBindingRequest.getAppGuid(), BIND_ACTION, SOURCE);
 
-        jsonProducer.produceKafkaMessage(BINDING_TOPIC, logMetricBinding);
+        kafkaJsonProducer.produceKafkaMessage(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
 
         log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + bindingId);
@@ -80,9 +84,9 @@ public class LogMetricBindingService extends BindingServiceImpl {
     @Override
     protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
 
-        LogMetricBinding logMetricBinding = new LogMetricBinding(binding.getAppGuid(), UNBIND_ACTION);
+        BindingInformation logMetricBinding = new BindingInformation(binding.getAppGuid(), UNBIND_ACTION, SOURCE);
 
-        jsonProducer.produceKafkaMessage(BINDING_TOPIC, logMetricBinding);
+        kafkaJsonProducer.produceKafkaMessage(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
 
         log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + binding.getId());
@@ -100,8 +104,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
             serviceInstanceRepository.getServiceInstancesByServiceDefinitionId(serviceDefinition.getId()).forEach(serviceInstance -> {
                 bindingRepository.getBindingsForServiceInstance(serviceInstance.getId()).forEach(binding -> {
                     log.info("Found binding with bindingId = " + binding.getId() + ", synchronizing with Redis...");
-                    LogMetricBinding logMetricBinding = new LogMetricBinding(binding.getAppGuid(), BIND_ACTION);
-                    jsonProducer.produceKafkaMessage(BINDING_TOPIC, logMetricBinding);
+                    BindingInformation logMetricBinding = new BindingInformation(binding.getAppGuid(), BIND_ACTION, SOURCE);
+                    kafkaJsonProducer.produceKafkaMessage(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
                 });
             });
         });
