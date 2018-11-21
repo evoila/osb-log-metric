@@ -17,7 +17,6 @@
 
     <modules>
         <module>osb-autoscaler-messaging</module>
-        <module>osb-backup-core</module>
         <module>osb-dashboard</module>
         <module>osb-core</module>
         <module>osb-persistence</module>
