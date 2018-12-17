@@ -3,7 +3,6 @@ package de.evoila.cf.broker.custom;
 import de.evoila.cf.autoscaler.kafka.KafkaPropertiesBean;
 import de.evoila.cf.autoscaler.kafka.model.BindingInformation;
 import de.evoila.cf.autoscaler.kafka.producer.KafkaJsonProducer;
-import de.evoila.cf.broker.bean.RedisBean;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.RouteBinding;
 import de.evoila.cf.broker.model.ServiceInstance;
@@ -28,7 +27,7 @@ import java.util.Map;
  * Created by reneschollmeyer, evoila on 26.04.18.
  */
 @Service
-@ConditionalOnBean(RedisBean.class)
+@ConditionalOnBean(KafkaPropertiesBean.class)
 public class LogMetricBindingService extends BindingServiceImpl {
 
     private static final Logger log = LoggerFactory.getLogger(LogMetricBindingService.class);
@@ -59,6 +58,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
         this.bindingRepository = bindingRepository;
         this.kafkaJsonProducer = kafkaJsonProducer;
         this.kafkaPropertiesBean = kafkaPropertiesBean;
+
+        syncBindings();
     }
 
 
@@ -78,7 +79,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
         log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + bindingId);
 
-        ServiceInstanceBinding serviceInstanceBinding = new ServiceInstanceBinding(bindingId, serviceInstance.getId(), null, null);
+        ServiceInstanceBinding serviceInstanceBinding = new ServiceInstanceBinding(bindingId, serviceInstance.getId(), new HashMap<>());
         serviceInstanceBinding.setAppGuid(serviceInstanceBindingRequest.getAppGuid());
         return serviceInstanceBinding;
     }
