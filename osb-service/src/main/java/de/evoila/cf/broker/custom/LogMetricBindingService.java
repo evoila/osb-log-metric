@@ -59,7 +59,6 @@ public class LogMetricBindingService extends BindingServiceImpl {
         this.kafkaJsonProducer = kafkaJsonProducer;
         this.kafkaPropertiesBean = kafkaPropertiesBean;
 
-        kafkaJsonProducer.initializeKafkaProducer();
         syncBindings();
     }
 
@@ -75,7 +74,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
         BindingInformation logMetricBinding = new BindingInformation(serviceInstanceBindingRequest.getAppGuid(), BIND_ACTION, SOURCE);
 
-        kafkaJsonProducer.produceKafkaMessage(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
+        kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
 
         log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + bindingId);
@@ -90,7 +89,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
         BindingInformation logMetricBinding = new BindingInformation(binding.getAppGuid(), UNBIND_ACTION, SOURCE);
 
-        kafkaJsonProducer.produceKafkaMessage(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
+        kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
 
         log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + binding.getId());
@@ -109,7 +108,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
                 bindingRepository.getBindingsForServiceInstance(serviceInstance.getId()).forEach(binding -> {
                     log.info("Found binding with bindingId = " + binding.getId() + ", synchronizing with Redis...");
                     BindingInformation logMetricBinding = new BindingInformation(binding.getAppGuid(), BIND_ACTION, SOURCE);
-                    kafkaJsonProducer.produceKafkaMessage(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
+                    kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
                 });
             });
         });
