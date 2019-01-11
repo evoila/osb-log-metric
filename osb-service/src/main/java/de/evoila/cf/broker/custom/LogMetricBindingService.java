@@ -59,6 +59,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
         this.kafkaJsonProducer = kafkaJsonProducer;
         this.kafkaPropertiesBean = kafkaPropertiesBean;
 
+        kafkaJsonProducer.initializeKafkaProducer();
         syncBindings();
     }
 
