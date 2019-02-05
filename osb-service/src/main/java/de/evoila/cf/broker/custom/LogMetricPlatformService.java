@@ -42,4 +42,9 @@ public class LogMetricPlatformService extends ExistingServiceFactory {
     @Override
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
     }
+
+    @Override
+    public ServiceInstance getInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
+        return null;
+    }
 }

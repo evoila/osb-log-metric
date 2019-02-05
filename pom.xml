@@ -25,6 +25,7 @@
     </modules>
 
     <properties>
+        <kafka.version>2.0.0</kafka.version>
         <resource.dir>${basedir}/../osb-service/src/main/resources</resource.dir>
         <dashboard.module>monitoring</dashboard.module>
         <spring-cloud.version>Finchley.RELEASE</spring-cloud.version>
@@ -141,6 +142,10 @@
         <repository>
             <id>spring-repository</id>
             <url>https://repo.spring.io/libs-release</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 

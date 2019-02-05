@@ -1,6 +1,6 @@
 package de.evoila.cf.broker.controller;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.model.LogMetricEnvironment;
 import de.evoila.cf.broker.model.LogMetricRedisObject;
@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,13 +36,13 @@ public class LogMetricBindingController {
 
     private RedisClientConnector redisClient;
 
-    private Gson gson;
+    private ObjectMapper objectMapper;
 
     public LogMetricBindingController(BindingRepository bindingRepository, ServiceInstanceRepository serviceInstanceRepository, RedisClientConnector redisClient) {
         this.bindingRepository = bindingRepository;
         this.serviceInstanceRepository = serviceInstanceRepository;
         this.redisClient = redisClient;
-        gson = new Gson();
+        objectMapper = new ObjectMapper();
     }
 
     @GetMapping(value = "/{instanceId}/service_bindings")
@@ -54,7 +55,11 @@ public class LogMetricBindingController {
             List<LogMetricEnvironment> appData = new ArrayList<>();
 
             for(ServiceInstanceBinding serviceInstanceBinding: bindingRepository.getBindingsForServiceInstance(instanceId)) {
-                 appData.add(new LogMetricEnvironment(serviceInstanceBinding.getAppGuid(), gson.fromJson(redisClient.get(serviceInstanceBinding.getAppGuid()), LogMetricRedisObject.class)));
+                try {
+                    appData.add(new LogMetricEnvironment(serviceInstanceBinding.getAppGuid(), objectMapper.readValue(redisClient.get(serviceInstanceBinding.getAppGuid()), LogMetricRedisObject.class)));
+                } catch (IOException e) {
+                    log.error("Could not deserialize LogMetricRedisObject from json", e);
+                }
             }
 
             return new ResponseEntity<>(appData, HttpStatus.OK);
