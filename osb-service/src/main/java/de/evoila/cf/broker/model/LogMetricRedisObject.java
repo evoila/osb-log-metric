@@ -10,21 +10,11 @@ public class LogMetricRedisObject {
     private String organization;
     private String organization_guid;
     private boolean subscribed;
+    private boolean logMetric;
+    private boolean autoscaler;
 
-    public LogMetricRedisObject(String applicationName, String space, String organization, String organization_guid, boolean subscribed) {
-        this.applicationName = applicationName;
-        this.space = space;
-        this.organization = organization;
-        this.organization_guid = organization_guid;
-        this.subscribed = subscribed;
-    }
+    public LogMetricRedisObject() {
 
-    public LogMetricRedisObject(LogMetricEnvironment environment, boolean subscribed) {
-        this.applicationName = environment.getAppName();
-        this.space = environment.getSpace();
-        this.organization = environment.getOrganization();
-        this.organization_guid = environment.getOrganization_guid();
-        this.subscribed = subscribed;
     }
 
     public String getApplicationName() {
@@ -65,5 +55,21 @@ public class LogMetricRedisObject {
 
     public void setSubscribed(boolean subscribed) {
         this.subscribed = subscribed;
+    }
+
+    public boolean isLogMetric() {
+        return logMetric;
+    }
+
+    public void setLogMetric(boolean logMetric) {
+        this.logMetric = logMetric;
+    }
+
+    public boolean isAutoscaler() {
+        return autoscaler;
+    }
+
+    public void setAutoscaler(boolean autoscaler) {
+        this.autoscaler = autoscaler;
     }
 }
