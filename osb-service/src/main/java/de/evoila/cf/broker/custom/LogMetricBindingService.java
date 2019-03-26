@@ -18,6 +18,7 @@ import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -50,7 +51,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     public LogMetricBindingService(Catalog catalog, ServiceInstanceRepository serviceInstanceRepository, BindingRepository bindingRepository,
                                    ServiceDefinitionRepository serviceDefinitionRepository, RouteBindingRepository routeBindingRepository,
-                                   HAProxyService haProxyService, KafkaJsonProducer kafkaJsonProducer, KafkaPropertiesBean kafkaPropertiesBean,
+                                   @Autowired(required = false) HAProxyService haProxyService, KafkaJsonProducer kafkaJsonProducer, KafkaPropertiesBean kafkaPropertiesBean,
                                    JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService, jobRepository, asyncBindingService, platformRepository);
         this.catalog = catalog;
