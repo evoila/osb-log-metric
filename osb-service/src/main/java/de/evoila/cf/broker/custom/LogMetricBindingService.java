@@ -3,6 +3,7 @@ package de.evoila.cf.broker.custom;
 import de.evoila.cf.autoscaler.kafka.KafkaPropertiesBean;
 import de.evoila.cf.autoscaler.kafka.model.BindingInformation;
 import de.evoila.cf.autoscaler.kafka.producer.KafkaJsonProducer;
+import de.evoila.cf.broker.backend.BackendEndpointService;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.RouteBinding;
 import de.evoila.cf.broker.model.ServiceInstance;
@@ -49,6 +50,9 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     private KafkaPropertiesBean kafkaPropertiesBean;
 
+    @Autowired
+    private BackendEndpointService backendEndpointService;
+
     public LogMetricBindingService(Catalog catalog, ServiceInstanceRepository serviceInstanceRepository, BindingRepository bindingRepository,
                                    ServiceDefinitionRepository serviceDefinitionRepository, RouteBindingRepository routeBindingRepository,
                                    @Autowired(required = false) HAProxyService haProxyService, KafkaJsonProducer kafkaJsonProducer, KafkaPropertiesBean kafkaPropertiesBean,
@@ -80,6 +84,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
         log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + bindingId);
 
+        backendEndpointService.createBinding(bindingId, serviceInstanceBindingRequest, serviceInstance);
+
         ServiceInstanceBinding serviceInstanceBinding = new ServiceInstanceBinding(bindingId, serviceInstance.getId(), new HashMap<>());
         serviceInstanceBinding.setAppGuid(serviceInstanceBindingRequest.getAppGuid());
         return serviceInstanceBinding;
@@ -91,6 +97,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
         BindingInformation logMetricBinding = new BindingInformation(binding.getAppGuid(), UNBIND_ACTION, SOURCE);
 
         kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
+
+        backendEndpointService.deleteBinding(binding, serviceInstance);
 
         log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + binding.getId());
