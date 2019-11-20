@@ -23,7 +23,7 @@ import java.util.Map;
  */
 @RefreshScope
 @SpringBootApplication
-@EnableConfigurationProperties(value = {BasicAuthenticationPropertyBean.class})
+@EnableConfigurationProperties(BasicAuthenticationPropertyBean.class)
 public class Application {
 
     @Bean(name = "customProperties")

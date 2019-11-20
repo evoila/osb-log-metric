@@ -50,6 +50,7 @@ public class BindingRequest {
         this.bindingId = bindingId;
         this.instanceId = instanceId;
         this.appId = appId;
+        space = logMetricRedisObject.getSpace();
         appName = logMetricRedisObject.getApplicationName();
         organization = logMetricRedisObject.getOrganization();
         organization_guid = logMetricRedisObject.getOrganization_guid();

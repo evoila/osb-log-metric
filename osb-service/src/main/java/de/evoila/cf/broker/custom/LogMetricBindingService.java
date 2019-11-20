@@ -50,19 +50,19 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     private KafkaPropertiesBean kafkaPropertiesBean;
 
-    @Autowired
     private BackendEndpointService backendEndpointService;
 
     public LogMetricBindingService(Catalog catalog, ServiceInstanceRepository serviceInstanceRepository, BindingRepository bindingRepository,
                                    ServiceDefinitionRepository serviceDefinitionRepository, RouteBindingRepository routeBindingRepository,
                                    @Autowired(required = false) HAProxyService haProxyService, KafkaJsonProducer kafkaJsonProducer, KafkaPropertiesBean kafkaPropertiesBean,
-                                   JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository) {
+                                   JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository, BackendEndpointService backendEndpointService) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService, jobRepository, asyncBindingService, platformRepository);
         this.catalog = catalog;
         this.serviceInstanceRepository = serviceInstanceRepository;
         this.bindingRepository = bindingRepository;
         this.kafkaJsonProducer = kafkaJsonProducer;
         this.kafkaPropertiesBean = kafkaPropertiesBean;
+        this.backendEndpointService = backendEndpointService;
 
         syncBindings();
     }
@@ -77,7 +77,9 @@ public class LogMetricBindingService extends BindingServiceImpl {
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                  ServiceInstance serviceInstance, Plan plan) {
 
-        BindingInformation logMetricBinding = new BindingInformation(serviceInstanceBindingRequest.getAppGuid(), BIND_ACTION, SOURCE);
+        final String appId = serviceInstanceBindingRequest.getBindResource().getAppGuid();
+
+        BindingInformation logMetricBinding = new BindingInformation(appId, BIND_ACTION, SOURCE);
 
         kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
 
@@ -87,7 +89,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
         backendEndpointService.createBinding(bindingId, serviceInstanceBindingRequest, serviceInstance);
 
         ServiceInstanceBinding serviceInstanceBinding = new ServiceInstanceBinding(bindingId, serviceInstance.getId(), new HashMap<>());
-        serviceInstanceBinding.setAppGuid(serviceInstanceBindingRequest.getAppGuid());
+        serviceInstanceBinding.setAppGuid(appId);
         return serviceInstanceBinding;
     }
 

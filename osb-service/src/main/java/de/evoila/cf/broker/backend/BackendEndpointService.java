@@ -9,6 +9,7 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -30,26 +31,26 @@ public class BackendEndpointService {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     public void createBinding(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest, ServiceInstance serviceInstance) {
-        final String uri = authenticationProperties.host + ":" + authenticationProperties.port + "/serviceinstance/:instanceId/bindings/:bindingId"
+        final String uri = authenticationProperties.getHost() + ":" + authenticationProperties.getPort() + "/manage/serviceinstance/:instanceId/bindings/:bindingId"
                 .replace(":instanceId", serviceInstance.getId())
                 .replace(":bindingId", bindingId);
 
         try {
-            final String appId = serviceInstanceBindingRequest.getAppGuid();
+            final String appId = serviceInstanceBindingRequest.getBindResource().getAppGuid();
             LogMetricRedisObject logMetricRedisObject = objectMapper.readValue(redisClient.get(appId), LogMetricRedisObject.class);
 
             BindingRequest bindingRequest = new BindingRequest(bindingId, serviceInstance.getId(), appId, logMetricRedisObject);
 
             final HttpEntity<String> httpEntity = new HttpEntity<>(objectMapper.writeValueAsString(bindingRequest), getHeaders());
 
-            ResponseEntity responseEntity = restTemplate.exchange(
+            ResponseEntity<String> exchange = restTemplate.exchange(
                     uri,
                     HttpMethod.POST,
                     httpEntity,
-                    ResponseEntity.class
+                    String.class
             );
 
-            Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+            Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
 
         } catch (IOException e) {
             log.error("Could not deserialize LogMetricRedisObject from json", e);
@@ -57,52 +58,43 @@ public class BackendEndpointService {
 
     }
 
-    /*
-    public void createMultipleBindings(ServiceInstance serviceInstance) {
-        final String uri = authenticationProperties.host + ":" + authenticationProperties.port + "/serviceinstance/:instanceId/bindings"
-                .replace(":instanceId", serviceInstance.getId());
-
-        final HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
-    }
-     */
-
     public void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance) {
-        final String uri = authenticationProperties.host + ":" + authenticationProperties.port + "/serviceinstance/:instanceId/bindings/:bindingId"
+        final String uri = authenticationProperties.getHost() + ":" + authenticationProperties.getPort() + "/manage/serviceinstance/:instanceId/bindings/:bindingId"
                 .replace(":instanceId", serviceInstance.getId())
                 .replace(":bindingId", binding.getId());
 
         final HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
 
-        ResponseEntity responseEntity = restTemplate.exchange(
+        ResponseEntity<String> exchange = restTemplate.exchange(
                 uri,
                 HttpMethod.DELETE,
                 httpEntity,
-                ResponseEntity.class
+                String.class
         );
 
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
     }
 
     public void deleteServiceInstance(ServiceInstance serviceInstance) {
-        final String uri = authenticationProperties.host + ":" + authenticationProperties.port + "/serviceinstance/:instanceId"
+        final String uri = authenticationProperties.getHost() + ":" + authenticationProperties.getPort() + "/manage/serviceinstance/:instanceId"
                 .replace(":instanceId", serviceInstance.getId());
 
         final HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
 
-        ResponseEntity responseEntity = restTemplate.exchange(
+        ResponseEntity<String> exchange = restTemplate.exchange(
                 uri,
                 HttpMethod.DELETE,
                 httpEntity,
-                ResponseEntity.class
+                String.class
         );
 
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
     }
 
     private HttpHeaders getHeaders() {
         HttpHeaders header = new HttpHeaders();
         header.setContentType(MediaType.APPLICATION_JSON);
-        header.setBasicAuth(authenticationProperties.username, authenticationProperties.password);
+        header.setBasicAuth(authenticationProperties.getUsername(), authenticationProperties.getPassword());
         return header;
     }
 
