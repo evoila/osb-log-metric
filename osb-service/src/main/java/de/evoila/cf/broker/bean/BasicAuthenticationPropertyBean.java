@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+@Configuration
 @ConfigurationProperties(prefix = "spring.basicauth")
 @ConditionalOnProperty(prefix = "spring.basicauth", name = {"host", "port", "username", "password"})
 public class BasicAuthenticationPropertyBean {

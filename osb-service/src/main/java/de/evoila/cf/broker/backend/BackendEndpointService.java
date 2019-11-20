@@ -9,6 +9,7 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -17,18 +18,22 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 
 @Service
+@ConditionalOnBean(BasicAuthenticationPropertyBean.class)
 public class BackendEndpointService {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(BackendEndpointService.class);
 
-    @Autowired
     private BasicAuthenticationPropertyBean authenticationProperties;
-
-    @Autowired
     private RedisClientConnector redisClient;
+    private RestTemplate restTemplate;
+    private ObjectMapper objectMapper;
 
-    private RestTemplate restTemplate = new RestTemplate();
-    private ObjectMapper objectMapper = new ObjectMapper();
+    public BackendEndpointService(BasicAuthenticationPropertyBean authenticationProperties, RedisClientConnector redisClient) {
+        this.authenticationProperties = authenticationProperties;
+        this.redisClient = redisClient;
+        restTemplate = new RestTemplate();
+        objectMapper = new ObjectMapper();
+    }
 
     public void createBinding(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest, ServiceInstance serviceInstance) {
         final String uri = authenticationProperties.getHost() + ":" + authenticationProperties.getPort() + "/manage/serviceinstance/:instanceId/bindings/:bindingId"
