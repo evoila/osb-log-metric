@@ -1,34 +1,36 @@
-package de.evoila.cf.broker.backend;
+package de.evoila.cf.broker.dashboard;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.evoila.cf.broker.backend.request.BindingRequest;
-import de.evoila.cf.broker.bean.BasicAuthenticationPropertyBean;
+import de.evoila.cf.broker.dashboard.request.DashboardBackendBindingRequest;
+import de.evoila.cf.broker.bean.DashboardBackendPropertyBean;
+import de.evoila.cf.broker.exception.DashboardBackendRequestException;
+import de.evoila.cf.broker.exception.InvalidRedisObjectException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.redis.RedisClientConnector;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.util.Date;
 
 @Service
-@ConditionalOnBean(BasicAuthenticationPropertyBean.class)
-public class BackendEndpointService {
+@ConditionalOnBean(DashboardBackendPropertyBean.class)
+public class DashboardBackendService {
 
-    private final Logger log = LoggerFactory.getLogger(BackendEndpointService.class);
+    private final Logger log = LoggerFactory.getLogger(DashboardBackendService.class);
 
-    private BasicAuthenticationPropertyBean authenticationProperties;
+    private DashboardBackendPropertyBean authenticationProperties;
     private RedisClientConnector redisClient;
     private RestTemplate restTemplate;
     private ObjectMapper objectMapper;
 
-    public BackendEndpointService(BasicAuthenticationPropertyBean authenticationProperties, RedisClientConnector redisClient) {
+    public DashboardBackendService(DashboardBackendPropertyBean authenticationProperties, RedisClientConnector redisClient) {
         this.authenticationProperties = authenticationProperties;
         this.redisClient = redisClient;
         restTemplate = new RestTemplate();
@@ -44,9 +46,13 @@ public class BackendEndpointService {
             final String appId = serviceInstanceBindingRequest.getBindResource().getAppGuid();
             LogMetricRedisObject logMetricRedisObject = objectMapper.readValue(redisClient.get(appId), LogMetricRedisObject.class);
 
-            BindingRequest bindingRequest = new BindingRequest(bindingId, serviceInstance.getId(), appId, logMetricRedisObject);
+            if (logMetricRedisObject.getApplicationName() == null || logMetricRedisObject.getSpace() == null ||
+                    logMetricRedisObject.getOrganization() == null || logMetricRedisObject.getOrganization_guid() == null)
+                throw new InvalidRedisObjectException();
 
-            final HttpEntity<String> httpEntity = new HttpEntity<>(objectMapper.writeValueAsString(bindingRequest), getHeaders());
+            DashboardBackendBindingRequest dashboardBackendBindingRequest = new DashboardBackendBindingRequest(bindingId, serviceInstance.getId(), appId, logMetricRedisObject);
+
+            final HttpEntity<String> httpEntity = new HttpEntity<>(objectMapper.writeValueAsString(dashboardBackendBindingRequest), getHeaders());
 
             ResponseEntity<String> exchange = restTemplate.exchange(
                     uri,
@@ -55,7 +61,10 @@ public class BackendEndpointService {
                     String.class
             );
 
-            Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+            if (!exchange.getStatusCode().is2xxSuccessful()) {
+                throw new DashboardBackendRequestException("DashboardBackendRequestException: Error while requesting resource from a Dashboard Backend Endpoint.",
+                        exchange.getStatusCode(), new Date().getTime());
+            }
 
         } catch (IOException e) {
             log.error("Could not deserialize LogMetricRedisObject from json", e);
@@ -68,32 +77,36 @@ public class BackendEndpointService {
                 .replace(":instanceId", serviceInstance.getId())
                 .replace(":bindingId", binding.getId());
 
-        final HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
-
         ResponseEntity<String> exchange = restTemplate.exchange(
                 uri,
                 HttpMethod.DELETE,
-                httpEntity,
+                new HttpEntity<>(getHeaders()),
                 String.class
         );
 
-        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+        if (!exchange.getStatusCode().is2xxSuccessful()) {
+            throw new DashboardBackendRequestException("DashboardBackendRequestException: Error while requesting resource from a Dashboard Backend Endpoint.",
+                    exchange.getStatusCode(), new Date().getTime());
+        }
+
     }
 
     public void deleteServiceInstance(ServiceInstance serviceInstance) {
         final String uri = authenticationProperties.getHost() + ":" + authenticationProperties.getPort() + "/manage/serviceinstance/:instanceId"
                 .replace(":instanceId", serviceInstance.getId());
 
-        final HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
-
         ResponseEntity<String> exchange = restTemplate.exchange(
                 uri,
                 HttpMethod.DELETE,
-                httpEntity,
+                new HttpEntity<>(getHeaders()),
                 String.class
         );
 
-        Assert.assertEquals(HttpStatus.OK, exchange.getStatusCode());
+        if (!exchange.getStatusCode().is2xxSuccessful()) {
+            throw new DashboardBackendRequestException("DashboardBackendRequestException: Error while requesting resource from a Dashboard Backend Endpoint.",
+                    exchange.getStatusCode(), new Date().getTime());
+        }
+
     }
 
     private HttpHeaders getHeaders() {

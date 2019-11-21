@@ -1,4 +1,4 @@
-package de.evoila.cf.broker.backend.request;
+package de.evoila.cf.broker.dashboard.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -6,7 +6,7 @@ import de.evoila.cf.broker.model.LogMetricRedisObject;
 
 import javax.validation.constraints.NotEmpty;
 
-public class BindingRequest {
+public class DashboardBackendBindingRequest {
 
     @NotEmpty
     @JsonSerialize
@@ -43,10 +43,10 @@ public class BindingRequest {
     @JsonProperty("organization_guid")
     public String organization_guid;
 
-    public BindingRequest() {
+    public DashboardBackendBindingRequest() {
     }
 
-    public BindingRequest(String bindingId, String instanceId, String appId, LogMetricRedisObject logMetricRedisObject) {
+    public DashboardBackendBindingRequest(String bindingId, String instanceId, String appId, LogMetricRedisObject logMetricRedisObject) {
         this.bindingId = bindingId;
         this.instanceId = instanceId;
         this.appId = appId;
@@ -56,7 +56,7 @@ public class BindingRequest {
         organization_guid = logMetricRedisObject.getOrganization_guid();
     }
 
-    public BindingRequest(@NotEmpty String bindingId, @NotEmpty String instanceId, @NotEmpty String appId, @NotEmpty String appName, @NotEmpty String organization, @NotEmpty String space, @NotEmpty String organization_guid) {
+    public DashboardBackendBindingRequest(@NotEmpty String bindingId, @NotEmpty String instanceId, @NotEmpty String appId, @NotEmpty String appName, @NotEmpty String organization, @NotEmpty String space, @NotEmpty String organization_guid) {
         this.bindingId = bindingId;
         this.instanceId = instanceId;
         this.appId = appId;

@@ -1,6 +1,6 @@
 package de.evoila.cf.broker.custom;
 
-import de.evoila.cf.broker.backend.BackendEndpointService;
+import de.evoila.cf.broker.dashboard.DashboardBackendService;
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.ServiceInstance;
@@ -10,7 +10,6 @@ import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.existing.ExistingServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
@@ -25,11 +24,11 @@ public class LogMetricPlatformService extends ExistingServiceFactory {
 
     private final Logger log = LoggerFactory.getLogger(LogMetricPlatformService.class);
 
-    @Autowired
-    private BackendEndpointService backendEndpointService;
+    private DashboardBackendService dashboardBackendService;
 
-    public LogMetricPlatformService(PlatformRepository platformRepository, ServicePortAvailabilityVerifier portAvailabilityVerifier, ExistingEndpointBean existingEndpointBean) {
+    public LogMetricPlatformService(PlatformRepository platformRepository, ServicePortAvailabilityVerifier portAvailabilityVerifier, ExistingEndpointBean existingEndpointBean, DashboardBackendService dashboardBackendService) {
         super(platformRepository, portAvailabilityVerifier, existingEndpointBean);
+        this.dashboardBackendService = dashboardBackendService;
     }
 
     @Override
@@ -46,7 +45,7 @@ public class LogMetricPlatformService extends ExistingServiceFactory {
 
     @Override
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
-        backendEndpointService.deleteServiceInstance(serviceInstance);
+        dashboardBackendService.deleteServiceInstance(serviceInstance);
     }
 
     @Override

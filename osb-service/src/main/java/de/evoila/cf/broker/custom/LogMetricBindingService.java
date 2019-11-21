@@ -3,7 +3,7 @@ package de.evoila.cf.broker.custom;
 import de.evoila.cf.autoscaler.kafka.KafkaPropertiesBean;
 import de.evoila.cf.autoscaler.kafka.model.BindingInformation;
 import de.evoila.cf.autoscaler.kafka.producer.KafkaJsonProducer;
-import de.evoila.cf.broker.backend.BackendEndpointService;
+import de.evoila.cf.broker.dashboard.DashboardBackendService;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.RouteBinding;
 import de.evoila.cf.broker.model.ServiceInstance;
@@ -50,19 +50,19 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     private KafkaPropertiesBean kafkaPropertiesBean;
 
-    private BackendEndpointService backendEndpointService;
+    private DashboardBackendService dashboardBackendService;
 
     public LogMetricBindingService(Catalog catalog, ServiceInstanceRepository serviceInstanceRepository, BindingRepository bindingRepository,
                                    ServiceDefinitionRepository serviceDefinitionRepository, RouteBindingRepository routeBindingRepository,
                                    @Autowired(required = false) HAProxyService haProxyService, KafkaJsonProducer kafkaJsonProducer, KafkaPropertiesBean kafkaPropertiesBean,
-                                   JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository, BackendEndpointService backendEndpointService) {
+                                   JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository, DashboardBackendService dashboardBackendService) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService, jobRepository, asyncBindingService, platformRepository);
         this.catalog = catalog;
         this.serviceInstanceRepository = serviceInstanceRepository;
         this.bindingRepository = bindingRepository;
         this.kafkaJsonProducer = kafkaJsonProducer;
         this.kafkaPropertiesBean = kafkaPropertiesBean;
-        this.backendEndpointService = backendEndpointService;
+        this.dashboardBackendService = dashboardBackendService;
 
         syncBindings();
     }
@@ -83,7 +83,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
         kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
 
-        backendEndpointService.createBinding(bindingId, serviceInstanceBindingRequest, serviceInstance);
+        dashboardBackendService.createBinding(bindingId, serviceInstanceBindingRequest, serviceInstance);
 
         log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + bindingId);
@@ -100,7 +100,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
         kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
 
-        backendEndpointService.deleteBinding(binding, serviceInstance);
+        dashboardBackendService.deleteBinding(binding, serviceInstance);
 
         log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + binding.getId());
