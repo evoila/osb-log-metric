@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package de.evoila;
 
@@ -23,18 +23,18 @@ import java.util.Map;
 @SpringBootApplication
 public class Application {
 
-	@Bean(name = "customProperties")
-	public Map<String, String> customProperties() {
-		Map<String, String> customProperties = new HashMap<String, String>();
+    @Bean(name = "customProperties")
+    public Map<String, String> customProperties() {
+        Map<String, String> customProperties = new HashMap<String, String>();
 
-		return customProperties;
-	}
+        return customProperties;
+    }
 
-	public static void main(String[] args) {
-		SpringApplication springApplication = new SpringApplication(Application.class);
-		springApplication.addListeners(new ApplicationPidFileWriter());
-		ApplicationContext ctx = springApplication.run(args);
+    public static void main(String[] args) {
+        SpringApplication springApplication = new SpringApplication(Application.class);
+        springApplication.addListeners(new ApplicationPidFileWriter());
+        ApplicationContext ctx = springApplication.run(args);
 
-		Assert.notNull(ctx, "Context must not be null.");
-	}
+        Assert.notNull(ctx, "Context must not be null.");
+    }
 }
