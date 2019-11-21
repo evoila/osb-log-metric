@@ -6,8 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "spring.basicauth")
-@ConditionalOnProperty(prefix = "spring.basicauth", name = {"host", "port", "username", "password"})
+@ConfigurationProperties(prefix = "dashboard.backend")
+@ConditionalOnProperty(prefix = "dashboard.backend", name = {"host", "port", "username", "password"})
 public class DashboardBackendPropertyBean {
     private String host;
     private int port;
