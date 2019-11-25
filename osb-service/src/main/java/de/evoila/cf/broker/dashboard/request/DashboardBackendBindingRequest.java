@@ -46,16 +46,6 @@ public class DashboardBackendBindingRequest {
     public DashboardBackendBindingRequest() {
     }
 
-    public DashboardBackendBindingRequest(String bindingId, String instanceId, String appId, LogMetricRedisObject logMetricRedisObject) {
-        this.bindingId = bindingId;
-        this.instanceId = instanceId;
-        this.appId = appId;
-        space = logMetricRedisObject.getSpace();
-        appName = logMetricRedisObject.getApplicationName();
-        organization = logMetricRedisObject.getOrganization();
-        organization_guid = logMetricRedisObject.getOrganization_guid();
-    }
-
     public DashboardBackendBindingRequest(@NotEmpty String bindingId, @NotEmpty String instanceId, @NotEmpty String appId, @NotEmpty String appName, @NotEmpty String organization, @NotEmpty String space, @NotEmpty String organization_guid) {
         this.bindingId = bindingId;
         this.instanceId = instanceId;
