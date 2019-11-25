@@ -4,28 +4,28 @@ import org.springframework.http.HttpStatus;
 
 import java.util.Date;
 
-public class InvalidRedisObjectException extends RuntimeException {
+public class InvalidAppDataException extends RuntimeException {
 
     private String message;
     private long timestamp;
 
-    public InvalidRedisObjectException() {
-        this("InvalidRedisObjectException: The LogMetric-Redis Object found in the database has invalid properties (null values).", new Date().getTime());
+    public InvalidAppDataException() {
+        this("InvalidAppDataException: Found invalid App Data properties (null values).", new Date().getTime());
     }
 
-    public InvalidRedisObjectException(String message, long timestamp) {
+    public InvalidAppDataException(String message, long timestamp) {
         super(message);
         this.message = message;
         this.timestamp = timestamp;
     }
 
-    public InvalidRedisObjectException(String message, Throwable cause, long timestamp) {
+    public InvalidAppDataException(String message, Throwable cause, long timestamp) {
         super(message, cause);
         this.message = message;
         this.timestamp = timestamp;
     }
 
-    public InvalidRedisObjectException(Throwable cause, HttpStatus status, String message, long timestamp) {
+    public InvalidAppDataException(Throwable cause, HttpStatus status, String message, long timestamp) {
         super(cause);
         this.message = message;
         this.timestamp = timestamp;

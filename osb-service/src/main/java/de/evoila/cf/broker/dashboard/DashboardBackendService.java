@@ -1,37 +1,24 @@
 package de.evoila.cf.broker.dashboard;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.evoila.cf.broker.bean.CloudFoundryPropertiesBean;
-import de.evoila.cf.broker.bean.EndpointConfiguration;
 import de.evoila.cf.broker.cloudfoundry.UaaTokenRetriever;
 import de.evoila.cf.broker.dashboard.request.DashboardBackendBindingRequest;
 import de.evoila.cf.broker.bean.DashboardBackendPropertyBean;
 import de.evoila.cf.broker.exception.DashboardBackendRequestException;
-import de.evoila.cf.broker.exception.InvalidRedisObjectException;
+import de.evoila.cf.broker.exception.InvalidAppDataException;
 import de.evoila.cf.broker.model.*;
-import de.evoila.cf.broker.redis.RedisClientConnector;
-import de.evoila.cf.security.uaa.provider.UaaRelyingPartyAuthenticationProvider;
-import de.evoila.cf.security.uaa.token.UaaRelyingPartyToken;
-import de.evoila.cf.security.uaa.utils.UaaFilterUtils;
-import de.evoila.config.web.UaaSecurityConfiguration;
-import org.apache.kafka.common.protocol.types.Field;
-import org.cloudfoundry.client.v3.organizations.Organization;
-import org.cloudfoundry.uaa.UaaClient;
-import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Iterator;
 
 @Service
 @ConditionalOnBean(DashboardBackendPropertyBean.class)
@@ -65,6 +52,43 @@ public class DashboardBackendService {
 
             HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders(uaaTokenRetriever.getoAuthToken()));
 
+            ResponseEntity<String> cloudFoundryResponse = restTemplate.exchange(
+                    uriCloudFoundry,
+                    HttpMethod.GET,
+                    httpEntity,
+                    String.class
+            );
+
+            String responseBody = cloudFoundryResponse.getBody();
+            String appId, appName, space, organization, organizationGuid;
+
+            JsonNode appData = objectMapper.readTree(responseBody);
+            JsonNode appDataSpaces = appData.at("/included/spaces");
+            JsonNode appDataOrganizations = appData.at("/included/organizations");
+
+            if (appData == null || appData.isNull() || appDataSpaces == null || appDataSpaces.isNull() || appDataOrganizations == null || appDataOrganizations.isNull()) {
+                throw new InvalidAppDataException();
+            }
+
+            appId = appData.get("guid").asText();
+            appName = appData.get("name").asText();
+
+            if (!appDataSpaces.isArray() || !appDataOrganizations.isArray()) {
+                throw new InvalidAppDataException();
+            }
+
+            JsonNode appDataSpacesSpace = appDataSpaces.iterator().next();
+            JsonNode appDataOrganizationsOrganization = appDataOrganizations.iterator().next();
+
+            if (appDataSpacesSpace == null || appDataSpacesSpace.isNull() || appDataOrganizationsOrganization == null || appDataOrganizationsOrganization.isNull()) {
+                throw new InvalidAppDataException();
+            }
+
+            space = appDataSpacesSpace.get("name").asText();
+            organization = appDataOrganizationsOrganization.get("name").asText();
+            organizationGuid = appDataOrganizationsOrganization.get("guid").asText();
+
+            /*
             ResponseEntity<HashMap<String, Object>> cloudFoundryResponse = restTemplate.exchange(
                     uriCloudFoundry,
                     HttpMethod.GET,
@@ -88,9 +112,13 @@ public class DashboardBackendService {
             organizationGuid = (String) organizations.get("guid");
             organization = (String) organizations.get("name");
 
-            DashboardBackendBindingRequest dashboardBackendBindingRequest = new DashboardBackendBindingRequest(bindingId, serviceInstance.getId(), appId, appName, organization, space, organizationGuid);
+             */
 
-            httpEntity = new HttpEntity<>(objectMapper.writeValueAsString(dashboardBackendBindingRequest), getHeaders());
+            if (appId == null || appName == null || space == null || organization == null || organizationGuid == null) {
+                throw new InvalidAppDataException();
+            }
+
+            httpEntity = new HttpEntity<>(objectMapper.writeValueAsString(new DashboardBackendBindingRequest(bindingId, serviceInstance.getId(), appId, appName, organization, space, organizationGuid)), getHeaders());
 
             ResponseEntity<String> dashboardBackendResponse = restTemplate.exchange(
                     uriDashboardBackend,
