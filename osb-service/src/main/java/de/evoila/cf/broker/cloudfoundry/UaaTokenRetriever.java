@@ -36,7 +36,7 @@ public class UaaTokenRetriever {
         RestTemplate restTemplate = new RestTemplate();
         String uri = cloudFoundryPropertiesBean.getHost() + endpoint;
 
-        HttpEntity<LinkedMultiValueMap<String, String>> request = new HttpEntity<LinkedMultiValueMap<String, String>>(getBody(), httpHeaders);
+        HttpEntity<LinkedMultiValueMap<String, String>> request = new HttpEntity<>(getBody(), httpHeaders);
 
         ResponseEntity<HashMap> result = restTemplate.exchange(uri, HttpMethod.POST, request, HashMap.class);
 
@@ -50,7 +50,7 @@ public class UaaTokenRetriever {
 
     private HttpHeaders getHeaders() {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         httpHeaders.setBasicAuth(cloudFoundryPropertiesBean.getUsername(), cloudFoundryPropertiesBean.getPassword());
 
         return httpHeaders;

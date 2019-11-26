@@ -3,8 +3,9 @@ package de.evoila.cf.broker.dashboard;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.evoila.cf.broker.bean.CloudFoundryPropertiesBean;
+import de.evoila.cf.broker.bean.EndpointConfiguration;
 import de.evoila.cf.broker.cloudfoundry.UaaTokenRetriever;
-import de.evoila.cf.broker.dashboard.request.DashboardBackendBindingRequest;
+import de.evoila.cf.broker.model.AppData;
 import de.evoila.cf.broker.bean.DashboardBackendPropertyBean;
 import de.evoila.cf.broker.exception.DashboardBackendRequestException;
 import de.evoila.cf.broker.exception.InvalidAppDataException;
@@ -18,7 +19,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.Iterator;
 
 @Service
 @ConditionalOnBean(DashboardBackendPropertyBean.class)
@@ -27,14 +27,14 @@ public class DashboardBackendService {
     private final Logger log = LoggerFactory.getLogger(DashboardBackendService.class);
 
     private DashboardBackendPropertyBean authenticationProperties;
-    private CloudFoundryPropertiesBean cloudFoundryPropertiesBean;
+    private EndpointConfiguration endpointConfiguration;
     private UaaTokenRetriever uaaTokenRetriever;
     private RestTemplate restTemplate;
     private ObjectMapper objectMapper;
 
-    public DashboardBackendService(DashboardBackendPropertyBean authenticationProperties, CloudFoundryPropertiesBean cloudFoundryPropertiesBean, UaaTokenRetriever uaaTokenRetriever) {
+    public DashboardBackendService(DashboardBackendPropertyBean authenticationProperties, UaaTokenRetriever uaaTokenRetriever, EndpointConfiguration endpointConfiguration) {
         this.authenticationProperties = authenticationProperties;
-        this.cloudFoundryPropertiesBean = cloudFoundryPropertiesBean;
+        this.endpointConfiguration = endpointConfiguration;
         this.uaaTokenRetriever = uaaTokenRetriever;
         restTemplate = new RestTemplate();
         objectMapper = new ObjectMapper();
@@ -47,10 +47,10 @@ public class DashboardBackendService {
 
         try {
 
-            final String uriCloudFoundry = cloudFoundryPropertiesBean.getHost() + "/v3/apps/:guid?include=space.organization"
-                    .replace(":gui", serviceInstanceBindingRequest.getBindResource().getAppGuid());
+            final String uriCloudFoundry = endpointConfiguration.getDefault() + ("/v3/apps/:guid?include=space.organization"
+                    .replace(":guid", serviceInstanceBindingRequest.getBindResource().getAppGuid()));
 
-            HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders(uaaTokenRetriever.getoAuthToken()));
+            HttpEntity<String> httpEntity = new HttpEntity<>(getHeadersBearer(uaaTokenRetriever.getoAuthToken()));
 
             ResponseEntity<String> cloudFoundryResponse = restTemplate.exchange(
                     uriCloudFoundry,
@@ -118,7 +118,9 @@ public class DashboardBackendService {
                 throw new InvalidAppDataException();
             }
 
-            httpEntity = new HttpEntity<>(objectMapper.writeValueAsString(new DashboardBackendBindingRequest(bindingId, serviceInstance.getId(), appId, appName, organization, space, organizationGuid)), getHeaders());
+            AppData appDataObj = new AppData(bindingId, serviceInstance.getId(), appId, appName, organization, space, organizationGuid);
+
+            httpEntity = new HttpEntity<>(objectMapper.writeValueAsString(appDataObj), getHeadersBasicAuth());
 
             ResponseEntity<String> dashboardBackendResponse = restTemplate.exchange(
                     uriDashboardBackend,
@@ -146,7 +148,7 @@ public class DashboardBackendService {
         ResponseEntity<String> exchange = restTemplate.exchange(
                 uri,
                 HttpMethod.DELETE,
-                new HttpEntity<>(getHeaders()),
+                new HttpEntity<>(getHeadersBasicAuth()),
                 String.class
         );
 
@@ -164,7 +166,7 @@ public class DashboardBackendService {
         ResponseEntity<String> exchange = restTemplate.exchange(
                 uri,
                 HttpMethod.DELETE,
-                new HttpEntity<>(getHeaders()),
+                new HttpEntity<>(getHeadersBasicAuth()),
                 String.class
         );
 
@@ -175,14 +177,14 @@ public class DashboardBackendService {
 
     }
 
-    private HttpHeaders getHeaders() {
+    private HttpHeaders getHeadersBasicAuth() {
         HttpHeaders header = new HttpHeaders();
         header.setContentType(MediaType.APPLICATION_JSON);
         header.setBasicAuth(authenticationProperties.getUsername(), authenticationProperties.getPassword());
         return header;
     }
 
-    private HttpHeaders getHeaders(String token) {
+    private HttpHeaders getHeadersBearer(String token) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         httpHeaders.setBearerAuth(token);
