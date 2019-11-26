@@ -2,7 +2,6 @@ package de.evoila.cf.broker.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import de.evoila.cf.broker.model.LogMetricRedisObject;
 
 import javax.validation.constraints.NotEmpty;
 
@@ -41,19 +40,19 @@ public class AppData {
     @NotEmpty
     @JsonSerialize
     @JsonProperty("organization_guid")
-    public String organization_guid;
+    public String organizationGuid;
 
     public AppData() {
     }
 
-    public AppData(@NotEmpty String bindingId, @NotEmpty String instanceId, @NotEmpty String appId, @NotEmpty String appName, @NotEmpty String organization, @NotEmpty String space, @NotEmpty String organization_guid) {
+    public AppData(@NotEmpty String bindingId, @NotEmpty String instanceId, @NotEmpty String appId, @NotEmpty String appName, @NotEmpty String organization, @NotEmpty String space, @NotEmpty String organizationGuid) {
         this.bindingId = bindingId;
         this.instanceId = instanceId;
         this.appId = appId;
         this.appName = appName;
         this.organization = organization;
         this.space = space;
-        this.organization_guid = organization_guid;
+        this.organizationGuid = organizationGuid;
     }
 
     public String getBindingId() {
@@ -104,12 +103,12 @@ public class AppData {
         this.space = space;
     }
 
-    public String getOrganization_guid() {
-        return organization_guid;
+    public String getOrganizationGuid() {
+        return organizationGuid;
     }
 
-    public void setOrganization_guid(String organization_guid) {
-        this.organization_guid = organization_guid;
+    public void setOrganizationGuid(String organizationGuid) {
+        this.organizationGuid = organizationGuid;
     }
 
     @Override
@@ -121,7 +120,7 @@ public class AppData {
                 ", appName='" + appName + '\'' +
                 ", organization='" + organization + '\'' +
                 ", space='" + space + '\'' +
-                ", organization_guid='" + organization_guid + '\'' +
+                ", organization_guid='" + organizationGuid + '\'' +
                 '}';
     }
 }

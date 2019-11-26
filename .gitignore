@@ -30,3 +30,5 @@ ca.pem
 osb-service/src/main/resources/static
 osb-service/src/main/resources/templates
 .idea/
+client.keystore.jks
+client.truststore.jks

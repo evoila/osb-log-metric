@@ -2,9 +2,10 @@ package de.evoila.cf.broker.dashboard;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.evoila.cf.broker.bean.CloudFoundryPropertiesBean;
 import de.evoila.cf.broker.bean.EndpointConfiguration;
 import de.evoila.cf.broker.cloudfoundry.UaaTokenRetriever;
+import de.evoila.cf.broker.exception.ServiceBrokerException;
+import de.evoila.cf.broker.exception.ServiceInstanceBindingException;
 import de.evoila.cf.broker.model.AppData;
 import de.evoila.cf.broker.bean.DashboardBackendPropertyBean;
 import de.evoila.cf.broker.exception.DashboardBackendRequestException;
@@ -40,27 +41,29 @@ public class DashboardBackendService {
         objectMapper = new ObjectMapper();
     }
 
-    public void createBinding(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest, ServiceInstance serviceInstance) {
+    public void createBinding(String appId, String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest, ServiceInstance serviceInstance) {
         final String uriDashboardBackend = authenticationProperties.getHost() + ":" + authenticationProperties.getPort() + "/manage/serviceinstance/:instanceId/bindings/:bindingId"
                 .replace(":instanceId", serviceInstance.getId())
                 .replace(":bindingId", bindingId);
 
+        final String uriCloudFoundry = endpointConfiguration.getDefault() + ("/v3/apps/:guid?include=space.organization"
+                .replace(":guid", appId));
+
+        HttpEntity<String> httpEntity = new HttpEntity<>(getHeadersBearer(uaaTokenRetriever.getoAuthToken()));
+
+        ResponseEntity<String> cloudFoundryResponse = restTemplate.exchange(
+                uriCloudFoundry,
+                HttpMethod.GET,
+                httpEntity,
+                String.class
+        );
+
+        String responseBody = cloudFoundryResponse.getBody();
+        AppData appDataObj = new AppData();
+        appDataObj.setBindingId(bindingId);
+        appDataObj.setInstanceId(serviceInstance.getId());
+
         try {
-
-            final String uriCloudFoundry = endpointConfiguration.getDefault() + ("/v3/apps/:guid?include=space.organization"
-                    .replace(":guid", serviceInstanceBindingRequest.getBindResource().getAppGuid()));
-
-            HttpEntity<String> httpEntity = new HttpEntity<>(getHeadersBearer(uaaTokenRetriever.getoAuthToken()));
-
-            ResponseEntity<String> cloudFoundryResponse = restTemplate.exchange(
-                    uriCloudFoundry,
-                    HttpMethod.GET,
-                    httpEntity,
-                    String.class
-            );
-
-            String responseBody = cloudFoundryResponse.getBody();
-            String appId, appName, space, organization, organizationGuid;
 
             JsonNode appData = objectMapper.readTree(responseBody);
             JsonNode appDataSpaces = appData.at("/included/spaces");
@@ -70,8 +73,8 @@ public class DashboardBackendService {
                 throw new InvalidAppDataException();
             }
 
-            appId = appData.get("guid").asText();
-            appName = appData.get("name").asText();
+            appDataObj.setAppId(appData.get("guid").asText());
+            appDataObj.setAppName(appData.get("name").asText());
 
             if (!appDataSpaces.isArray() || !appDataOrganizations.isArray()) {
                 throw new InvalidAppDataException();
@@ -84,48 +87,14 @@ public class DashboardBackendService {
                 throw new InvalidAppDataException();
             }
 
-            space = appDataSpacesSpace.get("name").asText();
-            organization = appDataOrganizationsOrganization.get("name").asText();
-            organizationGuid = appDataOrganizationsOrganization.get("guid").asText();
-
-            /*
-            ResponseEntity<HashMap<String, Object>> cloudFoundryResponse = restTemplate.exchange(
-                    uriCloudFoundry,
-                    HttpMethod.GET,
-                    httpEntity,
-                    new ParameterizedTypeReference<>() {
-                    }
-            );
-
-            HashMap<String, Object> responseBody = cloudFoundryResponse.getBody();
-            String appId, appName, organization, space, organizationGuid;
-
-            appId = (String) responseBody.get("guid");
-            appName = (String) responseBody.get("name");
-
-            HashMap<String, Object> included = (HashMap<String, Object>) responseBody.get("included");
-
-            HashMap<String, Object> spaces = (HashMap<String, Object>) included.get("spaces");
-            space = (String) spaces.get("name");
-
-            HashMap<String, Object> organizations = (HashMap<String, Object>) responseBody.get("organizations");
-            organizationGuid = (String) organizations.get("guid");
-            organization = (String) organizations.get("name");
-
-             */
-
-            if (appId == null || appName == null || space == null || organization == null || organizationGuid == null) {
-                throw new InvalidAppDataException();
-            }
-
-            AppData appDataObj = new AppData(bindingId, serviceInstance.getId(), appId, appName, organization, space, organizationGuid);
-
-            httpEntity = new HttpEntity<>(objectMapper.writeValueAsString(appDataObj), getHeadersBasicAuth());
+            appDataObj.setSpace(appDataSpacesSpace.get("name").asText());
+            appDataObj.setOrganization(appDataOrganizationsOrganization.get("name").asText());
+            appDataObj.setOrganizationGuid(appDataOrganizationsOrganization.get("guid").asText());
 
             ResponseEntity<String> dashboardBackendResponse = restTemplate.exchange(
                     uriDashboardBackend,
                     HttpMethod.POST,
-                    httpEntity,
+                    new HttpEntity<>(appDataObj, getHeadersBasicAuth()),
                     String.class
             );
 
@@ -134,8 +103,8 @@ public class DashboardBackendService {
                         dashboardBackendResponse.getStatusCode(), new Date().getTime());
             }
 
-        } catch (IOException e) {
-            log.error("Could not deserialize LogMetricRedisObject from json", e);
+        } catch (Exception e) {
+            log.error("Could not deserialize AppData from json", e);
         }
 
     }
