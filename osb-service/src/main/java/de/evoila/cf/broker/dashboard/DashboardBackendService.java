@@ -2,6 +2,7 @@ package de.evoila.cf.broker.dashboard;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.evoila.cf.broker.bean.CfEndpointConfiguration;
 import de.evoila.cf.broker.bean.EndpointConfiguration;
 import de.evoila.cf.broker.cloudfoundry.UaaTokenRetriever;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
@@ -28,14 +29,14 @@ public class DashboardBackendService {
     private final Logger log = LoggerFactory.getLogger(DashboardBackendService.class);
 
     private DashboardBackendPropertyBean authenticationProperties;
-    private EndpointConfiguration endpointConfiguration;
+    private CfEndpointConfiguration cfEndpointConfiguration;
     private UaaTokenRetriever uaaTokenRetriever;
     private RestTemplate restTemplate;
     private ObjectMapper objectMapper;
 
-    public DashboardBackendService(DashboardBackendPropertyBean authenticationProperties, UaaTokenRetriever uaaTokenRetriever, EndpointConfiguration endpointConfiguration) {
+    public DashboardBackendService(DashboardBackendPropertyBean authenticationProperties, UaaTokenRetriever uaaTokenRetriever, CfEndpointConfiguration cfEndpointConfiguration) {
         this.authenticationProperties = authenticationProperties;
-        this.endpointConfiguration = endpointConfiguration;
+        this.cfEndpointConfiguration = cfEndpointConfiguration;
         this.uaaTokenRetriever = uaaTokenRetriever;
         restTemplate = new RestTemplate();
         objectMapper = new ObjectMapper();
@@ -46,7 +47,7 @@ public class DashboardBackendService {
                 .replace(":instanceId", serviceInstance.getId())
                 .replace(":bindingId", bindingId);
 
-        final String uriCloudFoundry = endpointConfiguration.getDefault() + ("/v3/apps/:guid?include=space.organization"
+        final String uriCloudFoundry = cfEndpointConfiguration.getDefault() + ("/v3/apps/:guid?include=space.organization"
                 .replace(":guid", appId));
 
         HttpEntity<String> httpEntity = new HttpEntity<>(getHeadersBearer(uaaTokenRetriever.getoAuthToken()));
