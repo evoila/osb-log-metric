@@ -22,6 +22,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,15 +76,15 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     @Override
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
-                                                 ServiceInstance serviceInstance, Plan plan) {
+                                                 ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
 
         final String appId = serviceInstanceBindingRequest.getBindResource().getAppGuid();
 
         BindingInformation logMetricBinding = new BindingInformation(appId, BIND_ACTION, SOURCE);
 
+        // Kafka or Dashboard must be reverted in the future if one of both fails!!!
         kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
-
-        dashboardBackendService.createBinding(bindingId, serviceInstanceBindingRequest, serviceInstance);
+        dashboardBackendService.createBinding(appId, bindingId, serviceInstanceBindingRequest, serviceInstance);
 
         log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + bindingId);
@@ -98,8 +99,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
         BindingInformation logMetricBinding = new BindingInformation(binding.getAppGuid(), UNBIND_ACTION, SOURCE);
 
+        // Kafka or Dashboard must be reverted in the future if one of both fails!!!
         kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
-
         dashboardBackendService.deleteBinding(binding, serviceInstance);
 
         log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
