@@ -48,6 +48,11 @@
             <version>${deployment.version}</version>
         </dependency>
         <dependency>
+            <groupId>de.evoila.cf.broker</groupId>
+            <artifactId>osb-autoscaler-messaging</artifactId>
+            <version>${core.version}</version>
+        </dependency>
+        <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>2.9.0</version>

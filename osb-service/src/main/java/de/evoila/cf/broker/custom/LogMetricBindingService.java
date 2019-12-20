@@ -1,17 +1,20 @@
 package de.evoila.cf.broker.custom;
 
-import de.evoila.cf.broker.bean.impl.RedisBeanImpl;
+import de.evoila.cf.autoscaler.kafka.KafkaPropertiesBean;
+import de.evoila.cf.autoscaler.kafka.model.BindingInformation;
+import de.evoila.cf.autoscaler.kafka.producer.KafkaJsonProducer;
 import de.evoila.cf.broker.dashboard.DashboardBackendService;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.model.*;
+import de.evoila.cf.broker.model.RouteBinding;
+import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.model.ServiceInstanceBinding;
+import de.evoila.cf.broker.model.ServiceInstanceBindingRequest;
 import de.evoila.cf.broker.model.catalog.Catalog;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
-import de.evoila.cf.broker.redis.RedisClientConnector;
 import de.evoila.cf.broker.repository.*;
 import de.evoila.cf.broker.service.AsyncBindingService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -24,7 +27,7 @@ import java.util.Map;
  * Created by reneschollmeyer, evoila on 26.04.18.
  */
 @Service
-@ConditionalOnBean(RedisBeanImpl.class)
+@ConditionalOnBean(KafkaPropertiesBean.class)
 public class LogMetricBindingService extends BindingServiceImpl {
 
     private static final Logger log = LoggerFactory.getLogger(LogMetricBindingService.class);
@@ -41,18 +44,22 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     private BindingRepository bindingRepository;
 
-    private RedisClientConnector redisClient;
+    private KafkaJsonProducer kafkaJsonProducer;
+
+    private KafkaPropertiesBean kafkaPropertiesBean;
 
     private DashboardBackendService dashboardBackendService;
 
     public LogMetricBindingService(Catalog catalog, ServiceInstanceRepository serviceInstanceRepository, BindingRepository bindingRepository,
-                                   ServiceDefinitionRepository serviceDefinitionRepository, RouteBindingRepository routeBindingRepository, RedisClientConnector redisClient,
+                                   ServiceDefinitionRepository serviceDefinitionRepository, RouteBindingRepository routeBindingRepository,
+                                   KafkaJsonProducer kafkaJsonProducer, KafkaPropertiesBean kafkaPropertiesBean,
                                    JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository, DashboardBackendService dashboardBackendService) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, jobRepository, asyncBindingService, platformRepository);
         this.catalog = catalog;
         this.serviceInstanceRepository = serviceInstanceRepository;
         this.bindingRepository = bindingRepository;
-        this.redisClient = redisClient;
+        this.kafkaJsonProducer = kafkaJsonProducer;
+        this.kafkaPropertiesBean = kafkaPropertiesBean;
         this.dashboardBackendService = dashboardBackendService;
 
         syncBindings();
@@ -66,17 +73,15 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     @Override
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
-                                                 ServiceInstance serviceInstance, Plan plan) {
+                                                 ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
 
         final String appId = serviceInstanceBindingRequest.getBindResource().getAppGuid();
 
-        // Kafka or Dashboard must be reverted in the future if one of both fails!!!
-        AppData appDataObj = dashboardBackendService.createAppData(appId, bindingId, serviceInstance);
-        JSONObject appDataJson = new JSONObject(appDataObj);
-        appDataJson.put("subscribed", "true");
+        BindingInformation logMetricBinding = new BindingInformation(appId, BIND_ACTION, SOURCE);
 
-        redisClient.set(serviceInstanceBindingRequest.getBindResource().getAppGuid(), appDataJson.toString());
-        dashboardBackendService.createBinding(appId, bindingId, serviceInstance, appDataObj);
+        // Kafka or Dashboard must be reverted in the future if one of both fails!!!
+        kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
+        dashboardBackendService.createBinding(appId, bindingId, serviceInstanceBindingRequest, serviceInstance);
 
         log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + bindingId);
@@ -89,8 +94,10 @@ public class LogMetricBindingService extends BindingServiceImpl {
     @Override
     protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
 
+        BindingInformation logMetricBinding = new BindingInformation(binding.getAppGuid(), UNBIND_ACTION, SOURCE);
+
         // Kafka or Dashboard must be reverted in the future if one of both fails!!!
-        redisClient.del(binding.getAppGuid());
+        kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
         dashboardBackendService.deleteBinding(binding, serviceInstance);
 
         log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
@@ -109,16 +116,8 @@ public class LogMetricBindingService extends BindingServiceImpl {
             serviceInstanceRepository.getServiceInstancesByServiceDefinitionId(serviceDefinition.getId()).forEach(serviceInstance -> {
                 bindingRepository.getBindingsForServiceInstance(serviceInstance.getId()).forEach(binding -> {
                     log.info("Found binding with bindingId = " + binding.getId() + ", synchronizing with Redis...");
-
-                    String appId = binding.getAppGuid();
-
-                    if (redisClient.get(appId) == null) {
-                        AppData appDataObj = dashboardBackendService.createAppData(appId, binding.getId(), serviceInstance);
-                        JSONObject appDataJson = new JSONObject(appDataObj);
-                        appDataJson.put("subscribed", "true");
-
-                        redisClient.set(appId, appDataJson.toString());
-                    }
+                    BindingInformation logMetricBinding = new BindingInformation(binding.getAppGuid(), BIND_ACTION, SOURCE);
+                    kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
                 });
             });
         });

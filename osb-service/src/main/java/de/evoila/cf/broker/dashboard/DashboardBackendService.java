@@ -3,13 +3,15 @@ package de.evoila.cf.broker.dashboard;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.evoila.cf.broker.bean.CfEndpointConfiguration;
-import de.evoila.cf.broker.bean.DashboardBackendPropertyBean;
+import de.evoila.cf.broker.bean.EndpointConfiguration;
 import de.evoila.cf.broker.cloudfoundry.UaaTokenRetriever;
+import de.evoila.cf.broker.exception.ServiceBrokerException;
+import de.evoila.cf.broker.exception.ServiceInstanceBindingException;
+import de.evoila.cf.broker.model.AppData;
+import de.evoila.cf.broker.bean.DashboardBackendPropertyBean;
 import de.evoila.cf.broker.exception.DashboardBackendRequestException;
 import de.evoila.cf.broker.exception.InvalidAppDataException;
-import de.evoila.cf.broker.model.AppData;
-import de.evoila.cf.broker.model.ServiceInstance;
-import de.evoila.cf.broker.model.ServiceInstanceBinding;
+import de.evoila.cf.broker.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -17,6 +19,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.Date;
 
 @Service
@@ -39,7 +42,11 @@ public class DashboardBackendService {
         objectMapper = new ObjectMapper();
     }
 
-    public AppData createAppData(String appId, String bindingId, ServiceInstance serviceInstance) {
+    public void createBinding(String appId, String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest, ServiceInstance serviceInstance) {
+        final String uriDashboardBackend = authenticationProperties.getHost() + ":" + authenticationProperties.getPort() + "/manage/serviceinstance/:instanceId/bindings/:bindingId"
+                .replace(":instanceId", serviceInstance.getId())
+                .replace(":bindingId", bindingId);
+
         final String uriCloudFoundry = cfEndpointConfiguration.getDefault() + ("/v3/apps/:guid?include=space.organization"
                 .replace(":guid", appId));
 
@@ -85,29 +92,22 @@ public class DashboardBackendService {
             appDataObj.setOrganization(appDataOrganizationsOrganization.get("name").asText());
             appDataObj.setOrganizationGuid(appDataOrganizationsOrganization.get("guid").asText());
 
+            ResponseEntity<String> dashboardBackendResponse = restTemplate.exchange(
+                    uriDashboardBackend,
+                    HttpMethod.POST,
+                    new HttpEntity<>(appDataObj, getHeadersBasicAuth()),
+                    String.class
+            );
+
+            if (!dashboardBackendResponse.getStatusCode().is2xxSuccessful()) {
+                throw new DashboardBackendRequestException("DashboardBackendRequestException: Error while requesting resource from a Dashboard Backend Endpoint.",
+                        dashboardBackendResponse.getStatusCode(), new Date().getTime());
+            }
+
         } catch (Exception e) {
             log.error("Could not deserialize AppData from json", e);
         }
 
-        return appDataObj;
-    }
-
-    public void createBinding(String appId, String bindingId, ServiceInstance serviceInstance, AppData appDataObj) {
-        final String uriDashboardBackend = authenticationProperties.getHost() + ":" + authenticationProperties.getPort() + "/manage/serviceinstance/:instanceId/bindings/:bindingId"
-                .replace(":instanceId", serviceInstance.getId())
-                .replace(":bindingId", bindingId);
-
-        ResponseEntity<String> dashboardBackendResponse = restTemplate.exchange(
-                uriDashboardBackend,
-                HttpMethod.POST,
-                new HttpEntity<>(appDataObj, getHeadersBasicAuth()),
-                String.class
-        );
-
-        if (!dashboardBackendResponse.getStatusCode().is2xxSuccessful()) {
-            throw new DashboardBackendRequestException("DashboardBackendRequestException: Error while requesting resource from a Dashboard Backend Endpoint.",
-                    dashboardBackendResponse.getStatusCode(), new Date().getTime());
-        }
     }
 
     public void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance) {
