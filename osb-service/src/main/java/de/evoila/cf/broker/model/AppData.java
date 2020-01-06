@@ -42,10 +42,15 @@ public class AppData {
     @JsonProperty("organization_guid")
     public String organizationGuid;
 
+    @NotEmpty
+    @JsonSerialize
+    @JsonProperty("spaceId")
+    public String spaceId;
+
     public AppData() {
     }
 
-    public AppData(@NotEmpty String bindingId, @NotEmpty String instanceId, @NotEmpty String appId, @NotEmpty String appName, @NotEmpty String organization, @NotEmpty String space, @NotEmpty String organizationGuid) {
+    public AppData(@NotEmpty String bindingId, @NotEmpty String instanceId, @NotEmpty String appId, @NotEmpty String appName, @NotEmpty String organization, @NotEmpty String space, @NotEmpty String organizationGuid, @NotEmpty String spaceId) {
         this.bindingId = bindingId;
         this.instanceId = instanceId;
         this.appId = appId;
@@ -53,6 +58,7 @@ public class AppData {
         this.organization = organization;
         this.space = space;
         this.organizationGuid = organizationGuid;
+        this.spaceId = spaceId;
     }
 
     public String getBindingId() {
@@ -111,6 +117,14 @@ public class AppData {
         this.organizationGuid = organizationGuid;
     }
 
+    public String getSpaceId() {
+        return spaceId;
+    }
+
+    public void setSpaceId(String spaceId) {
+        this.spaceId = spaceId;
+    }
+
     @Override
     public String toString() {
         return "AppData{" +
@@ -120,7 +134,8 @@ public class AppData {
                 ", appName='" + appName + '\'' +
                 ", organization='" + organization + '\'' +
                 ", space='" + space + '\'' +
-                ", organization_guid='" + organizationGuid + '\'' +
+                ", organizationGuid='" + organizationGuid + '\'' +
+                ", spaceId='" + spaceId + '\'' +
                 '}';
     }
 }
