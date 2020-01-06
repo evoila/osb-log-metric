@@ -3,12 +3,10 @@ package de.evoila.cf.broker.custom;
 import de.evoila.cf.autoscaler.kafka.KafkaPropertiesBean;
 import de.evoila.cf.autoscaler.kafka.model.BindingInformation;
 import de.evoila.cf.autoscaler.kafka.producer.KafkaJsonProducer;
+import de.evoila.cf.broker.cloudfoundry.CfUtils;
 import de.evoila.cf.broker.dashboard.DashboardBackendService;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.model.RouteBinding;
-import de.evoila.cf.broker.model.ServiceInstance;
-import de.evoila.cf.broker.model.ServiceInstanceBinding;
-import de.evoila.cf.broker.model.ServiceInstanceBindingRequest;
+import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.model.catalog.Catalog;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
@@ -50,10 +48,12 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
     private DashboardBackendService dashboardBackendService;
 
+    private CfUtils cfUtils;
+
     public LogMetricBindingService(Catalog catalog, ServiceInstanceRepository serviceInstanceRepository, BindingRepository bindingRepository,
                                    ServiceDefinitionRepository serviceDefinitionRepository, RouteBindingRepository routeBindingRepository,
                                    KafkaJsonProducer kafkaJsonProducer, KafkaPropertiesBean kafkaPropertiesBean,
-                                   JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository, DashboardBackendService dashboardBackendService) {
+                                   JobRepository jobRepository, AsyncBindingService asyncBindingService, PlatformRepository platformRepository, DashboardBackendService dashboardBackendService, CfUtils cfUtils) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, jobRepository, asyncBindingService, platformRepository);
         this.catalog = catalog;
         this.serviceInstanceRepository = serviceInstanceRepository;
@@ -61,6 +61,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
         this.kafkaJsonProducer = kafkaJsonProducer;
         this.kafkaPropertiesBean = kafkaPropertiesBean;
         this.dashboardBackendService = dashboardBackendService;
+        this.cfUtils = cfUtils;
 
         syncBindings();
     }
@@ -77,11 +78,12 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
         final String appId = serviceInstanceBindingRequest.getBindResource().getAppGuid();
 
-        BindingInformation logMetricBinding = new BindingInformation(appId, BIND_ACTION, SOURCE);
+        AppData appData = cfUtils.createAppData(appId, bindingId, serviceInstance);
 
         // Kafka or Dashboard must be reverted in the future if one of both fails!!!
+        BindingInformation logMetricBinding = new BindingInformation(appId, BIND_ACTION, SOURCE);
         kafkaJsonProducer.produce(kafkaPropertiesBean.getBindingTopic(), logMetricBinding);
-        dashboardBackendService.createBinding(appId, bindingId, serviceInstanceBindingRequest, serviceInstance);
+        dashboardBackendService.createBinding(bindingId, serviceInstance, appData);
 
         log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + bindingId);
