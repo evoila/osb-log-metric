@@ -1,16 +1,16 @@
 package de.evoila.cf.broker.dashboard;
 
 import de.evoila.cf.broker.bean.DashboardBackendPropertyBean;
-import de.evoila.cf.broker.utils.RestTemplateFactory;
 import de.evoila.cf.broker.exception.DashboardBackendRequestException;
 import de.evoila.cf.broker.model.AppData;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.ServiceInstanceBinding;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
 
@@ -18,10 +18,12 @@ import java.util.Date;
 @ConditionalOnBean(DashboardBackendPropertyBean.class)
 public class DashboardBackendService {
 
+    private final RestTemplate restTemplate;
     private DashboardBackendPropertyBean authenticationProperties;
 
-    public DashboardBackendService(DashboardBackendPropertyBean authenticationProperties) {
+    public DashboardBackendService(DashboardBackendPropertyBean authenticationProperties, RestTemplateBuilder templateBuilder) {
         this.authenticationProperties = authenticationProperties;
+        restTemplate = templateBuilder.errorHandler(new DashboardBackendResponseErrorHandler()).build();
     }
 
     public void createBinding(String bindingId, ServiceInstance serviceInstance, AppData appDataObj) {
@@ -29,10 +31,10 @@ public class DashboardBackendService {
                 .replace(":instanceId", serviceInstance.getId())
                 .replace(":bindingId", bindingId);
 
-        ResponseEntity<String> dashboardBackendResponse = RestTemplateFactory.getInstance().exchange(
+        ResponseEntity<String> dashboardBackendResponse = restTemplate.exchange(
                 uriDashboardBackend,
                 HttpMethod.POST,
-                new HttpEntity<>(appDataObj, RestTemplateFactory.getHeadersBasicAuth(authenticationProperties.getUsername(), authenticationProperties.getPassword())),
+                new HttpEntity<>(appDataObj, getHeadersBasicAuth(authenticationProperties.getUsername(), authenticationProperties.getPassword())),
                 String.class
         );
 
@@ -71,14 +73,21 @@ public class DashboardBackendService {
     }
 
     private ResponseEntity<String> requestDeleteOf(String uri) {
-        ResponseEntity<String> exchange = RestTemplateFactory.getInstance().exchange(
+        ResponseEntity<String> exchange = restTemplate.exchange(
                 uri,
                 HttpMethod.DELETE,
-                new HttpEntity<>(RestTemplateFactory.getHeadersBasicAuth(authenticationProperties.getUsername(), authenticationProperties.getPassword())),
+                new HttpEntity<>(getHeadersBasicAuth(authenticationProperties.getUsername(), authenticationProperties.getPassword())),
                 String.class
         );
 
         return exchange;
+    }
+
+    public HttpHeaders getHeadersBasicAuth(String username, String password) {
+        HttpHeaders header = new HttpHeaders();
+        header.setContentType(MediaType.APPLICATION_JSON);
+        header.setBasicAuth(username, password);
+        return header;
     }
 
 }
