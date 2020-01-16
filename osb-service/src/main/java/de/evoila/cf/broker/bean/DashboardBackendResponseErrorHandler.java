@@ -1,4 +1,4 @@
-package de.evoila.cf.broker.dashboard;
+package de.evoila.cf.broker.bean;
 
 import de.evoila.cf.broker.exception.DashboardBackendRequestException;
 import org.springframework.http.HttpStatus;

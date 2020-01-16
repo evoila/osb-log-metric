@@ -1,11 +1,11 @@
 package de.evoila.cf.broker.dashboard;
 
 import de.evoila.cf.broker.bean.DashboardBackendPropertyBean;
+import de.evoila.cf.broker.bean.DashboardBackendResponseErrorHandler;
 import de.evoila.cf.broker.exception.DashboardBackendRequestException;
 import de.evoila.cf.broker.model.AppData;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.ServiceInstanceBinding;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;

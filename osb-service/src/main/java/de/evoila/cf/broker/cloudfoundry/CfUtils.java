@@ -3,7 +3,6 @@ package de.evoila.cf.broker.cloudfoundry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.evoila.cf.broker.bean.CfEndpointConfiguration;
-import de.evoila.cf.broker.dashboard.DashboardBackendResponseErrorHandler;
 import de.evoila.cf.broker.exception.InvalidAppDataException;
 import de.evoila.cf.broker.model.AppData;
 import de.evoila.cf.broker.model.ServiceInstance;
