@@ -2,7 +2,6 @@ package de.evoila.cf.broker.dashboard;
 
 import de.evoila.cf.broker.bean.DashboardBackendPropertyBean;
 import de.evoila.cf.broker.bean.DashboardBackendResponseErrorHandler;
-import de.evoila.cf.broker.exception.DashboardBackendRequestException;
 import de.evoila.cf.broker.model.AppData;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.ServiceInstanceBinding;
@@ -11,8 +10,6 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.Date;
 
 @Service
 @ConditionalOnBean(DashboardBackendPropertyBean.class)
@@ -38,11 +35,6 @@ public class DashboardBackendService {
                 String.class
         );
 
-        if (!dashboardBackendResponse.getStatusCode().is2xxSuccessful()) {
-            throw new DashboardBackendRequestException("DashboardBackendRequestException: Error while requesting resource from a Dashboard Backend Endpoint.",
-                    dashboardBackendResponse.getStatusCode(), new Date().getTime());
-        }
-
     }
 
     public void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance) {
@@ -51,12 +43,6 @@ public class DashboardBackendService {
                 .replace(":bindingId", binding.getId());
 
         ResponseEntity<String> response = requestDeleteOf(uri);
-
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new DashboardBackendRequestException("DashboardBackendRequestException: Error while requesting resource from a Dashboard Backend Endpoint.",
-                    response.getStatusCode(), new Date().getTime());
-        }
-
     }
 
     public void deleteServiceInstance(ServiceInstance serviceInstance) {
@@ -64,12 +50,6 @@ public class DashboardBackendService {
                 .replace(":instanceId", serviceInstance.getId());
 
         ResponseEntity<String> response = requestDeleteOf(uri);
-
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new DashboardBackendRequestException("DashboardBackendRequestException: Error while requesting resource from a Dashboard Backend Endpoint.",
-                    response.getStatusCode(), new Date().getTime());
-        }
-
     }
 
     private ResponseEntity<String> requestDeleteOf(String uri) {
