@@ -28,7 +28,7 @@ public class DashboardBackendService {
                 .replace(":instanceId", serviceInstance.getId())
                 .replace(":bindingId", bindingId);
 
-        ResponseEntity<String> dashboardBackendResponse = restTemplate.exchange(
+        restTemplate.exchange(
                 uriDashboardBackend,
                 HttpMethod.POST,
                 new HttpEntity<>(appDataObj, getHeadersBasicAuth(authenticationProperties.getUsername(), authenticationProperties.getPassword())),
@@ -42,25 +42,24 @@ public class DashboardBackendService {
                 .replace(":instanceId", serviceInstance.getId())
                 .replace(":bindingId", binding.getId());
 
-        ResponseEntity<String> response = requestDeleteOf(uri);
+        requestDeleteOf(uri);
     }
 
     public void deleteServiceInstance(ServiceInstance serviceInstance) {
         final String uri = authenticationProperties.getHost() + ":" + authenticationProperties.getPort() + "/manage/serviceinstance/:instanceId"
                 .replace(":instanceId", serviceInstance.getId());
 
-        ResponseEntity<String> response = requestDeleteOf(uri);
+        requestDeleteOf(uri);
     }
 
     private ResponseEntity<String> requestDeleteOf(String uri) {
-        ResponseEntity<String> exchange = restTemplate.exchange(
+        return restTemplate.exchange(
                 uri,
                 HttpMethod.DELETE,
                 new HttpEntity<>(getHeadersBasicAuth(authenticationProperties.getUsername(), authenticationProperties.getPassword())),
                 String.class
         );
 
-        return exchange;
     }
 
     public HttpHeaders getHeadersBasicAuth(String username, String password) {

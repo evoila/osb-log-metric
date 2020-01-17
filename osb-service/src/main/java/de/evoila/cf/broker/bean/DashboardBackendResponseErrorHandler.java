@@ -24,7 +24,7 @@ public class DashboardBackendResponseErrorHandler
 
     @Override
     public void handleError(ClientHttpResponse httpResponse) throws IOException {
-        throw new DashboardBackendRequestException("DashboardBackendRequestException: Error while requesting resource from a Dashboard Backend Endpoint.",
+        throw new DashboardBackendRequestException("DashboardBackendRequestException: Failed to request resource from Dashboard Backend.",
                 httpResponse.getStatusCode(), new Date().getTime());
     }
 }
