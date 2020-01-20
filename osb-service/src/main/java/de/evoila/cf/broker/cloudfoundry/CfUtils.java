@@ -6,36 +6,39 @@ import de.evoila.cf.broker.bean.CfEndpointConfiguration;
 import de.evoila.cf.broker.exception.InvalidAppDataException;
 import de.evoila.cf.broker.model.AppData;
 import de.evoila.cf.broker.model.ServiceInstance;
-import de.evoila.cf.broker.utils.RestTemplateFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.RestTemplate;
 
 @Component
 public class CfUtils {
 
     private final Logger log = LoggerFactory.getLogger(CfUtils.class);
 
+    private final RestTemplate restTemplate;
+
     private CfEndpointConfiguration cfEndpointConfiguration;
     private UaaTokenRetriever uaaTokenRetriever;
     private ObjectMapper objectMapper;
 
-    public CfUtils(CfEndpointConfiguration cfEndpointConfiguration, UaaTokenRetriever uaaTokenRetriever, ObjectMapper objectMapper) {
+    public CfUtils(CfEndpointConfiguration cfEndpointConfiguration, UaaTokenRetriever uaaTokenRetriever, ObjectMapper objectMapper, RestTemplateBuilder templateBuilder) {
         this.cfEndpointConfiguration = cfEndpointConfiguration;
         this.uaaTokenRetriever = uaaTokenRetriever;
         this.objectMapper = objectMapper;
+        restTemplate = templateBuilder.errorHandler(new DefaultResponseErrorHandler()).build();
     }
 
     public AppData createAppData(String appId, String bindingId, ServiceInstance serviceInstance) {
         final String uriCloudFoundry = cfEndpointConfiguration.getDefault() + ("/v3/apps/:guid?include=space.organization"
                 .replace(":guid", appId));
 
-        HttpEntity<String> httpEntity = new HttpEntity<>(RestTemplateFactory.getHeadersBearer(uaaTokenRetriever.getoAuthToken()));
+        HttpEntity<String> httpEntity = new HttpEntity<>(getHeadersBearer(uaaTokenRetriever.getoAuthToken()));
 
-        ResponseEntity<String> cloudFoundryResponse = RestTemplateFactory.getInstance().exchange(
+        ResponseEntity<String> cloudFoundryResponse = restTemplate.exchange(
                 uriCloudFoundry,
                 HttpMethod.GET,
                 httpEntity,
@@ -81,6 +84,13 @@ public class CfUtils {
         }
 
         return appDataObj;
+    }
+
+    public HttpHeaders getHeadersBearer(String token) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        httpHeaders.setBearerAuth(token);
+        return httpHeaders;
     }
 
 }
