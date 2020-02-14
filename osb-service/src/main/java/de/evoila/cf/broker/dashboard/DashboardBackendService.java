@@ -20,7 +20,9 @@ public class DashboardBackendService {
 
     public DashboardBackendService(DashboardBackendPropertyBean authenticationProperties, RestTemplateBuilder templateBuilder) {
         this.authenticationProperties = authenticationProperties;
-        restTemplate = templateBuilder.errorHandler(new DashboardBackendResponseErrorHandler()).build();
+        //restTemplate =
+          //      templateBuilder.errorHandler(new DashboardBackendResponseErrorHandler()).build();
+        this.restTemplate = new RestTemplate();
     }
 
     public void createBinding(String bindingId, ServiceInstance serviceInstance, AppData appDataObj) {
