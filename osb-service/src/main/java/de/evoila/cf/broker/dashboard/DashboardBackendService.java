@@ -18,11 +18,10 @@ public class DashboardBackendService {
     private final RestTemplate restTemplate;
     private DashboardBackendPropertyBean authenticationProperties;
 
-    public DashboardBackendService(DashboardBackendPropertyBean authenticationProperties, RestTemplateBuilder templateBuilder) {
+    public DashboardBackendService(DashboardBackendPropertyBean authenticationProperties, DashboardBackendResponseErrorHandler dashboardBackendResponseErrorHandler) {
         this.authenticationProperties = authenticationProperties;
-        //restTemplate =
-          //      templateBuilder.errorHandler(new DashboardBackendResponseErrorHandler()).build();
         this.restTemplate = new RestTemplate();
+        this.restTemplate.setErrorHandler(dashboardBackendResponseErrorHandler);
     }
 
     public void createBinding(String bindingId, ServiceInstance serviceInstance, AppData appDataObj) {
