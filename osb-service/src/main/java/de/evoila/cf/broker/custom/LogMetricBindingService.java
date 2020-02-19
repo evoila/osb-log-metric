@@ -83,7 +83,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
         // Redis or Dashboard must be reverted in the future if one of both fails!!!
         JsonElement appDataJson = gsonBuilder.toJsonTree(appData);
-        appDataJson.getAsJsonObject().addProperty("subscribed", "true");
+        appDataJson.getAsJsonObject().addProperty("subscribed", true);
         redisClient.set(serviceInstanceBindingRequest.getBindResource().getAppGuid(), gsonBuilder.toJson(appDataJson));
 
         dashboardBackendService.createBinding(bindingId, serviceInstance, appData);
