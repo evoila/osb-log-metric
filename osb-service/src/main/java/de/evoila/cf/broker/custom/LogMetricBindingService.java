@@ -126,7 +126,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
                     if(redisClient.get(appId) == null) {
                         AppData appData = cfUtils.createAppData(appId, binding.getId(), serviceInstance);
                         JsonElement appDataJson = gsonBuilder.toJsonTree(appData);
-                        appDataJson.getAsJsonObject().addProperty("subscribed", "true");
+                        appDataJson.getAsJsonObject().addProperty("subscribed", true);
                         redisClient.set(appId, gsonBuilder.toJson(appDataJson));
                     }
                 });
