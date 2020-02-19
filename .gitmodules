@@ -10,6 +10,3 @@
 [submodule "osb-dashboard"]
 	path = osb-dashboard
 	url = git@github.com:evoila/cf-service-broker-dashboard.git
-[submodule "osb-autoscaler-messaging"]
-	path = osb-autoscaler-messaging
-	url = git@github.com:evoila/osb-autoscaler-messaging
