@@ -3,9 +3,11 @@ package de.evoila.cf.broker.custom;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import de.evoila.cf.broker.bean.impl.RedisBeanImpl;
 import de.evoila.cf.broker.cloudfoundry.CfUtils;
 import de.evoila.cf.broker.dashboard.DashboardBackendService;
+import de.evoila.cf.broker.exception.DashboardBackendRequestException;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.model.catalog.Catalog;
@@ -84,9 +86,14 @@ public class LogMetricBindingService extends BindingServiceImpl {
         // Redis or Dashboard must be reverted in the future if one of both fails!!!
         JsonElement appDataJson = gsonBuilder.toJsonTree(appData);
         appDataJson.getAsJsonObject().addProperty("subscribed", true);
-        redisClient.set(serviceInstanceBindingRequest.getBindResource().getAppGuid(), gsonBuilder.toJson(appDataJson));
+        redisClient.set(appId, gsonBuilder.toJson(appDataJson));
 
-        dashboardBackendService.createBinding(bindingId, serviceInstance, appData);
+        try {
+            dashboardBackendService.createBinding(bindingId, serviceInstance, appData);
+        } catch(DashboardBackendRequestException ex) {
+            log.error(ex.getMessage());
+            redisClient.del(appId);
+        }
 
         log.info("Binding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + bindingId);
@@ -99,10 +106,18 @@ public class LogMetricBindingService extends BindingServiceImpl {
     @Override
     protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) {
 
+        final String appId = binding.getAppGuid();
+
         // Redis or Dashboard must be reverted in the future if one of both fails!!!
-        AppData tmpAppData = gsonBuilder.fromJson(redisClient.get(binding.getAppGuid()), AppData.class);
+        String tmpAppData = redisClient.get(appId);
         redisClient.del(binding.getAppGuid());
-        dashboardBackendService.deleteBinding(binding, serviceInstance);
+
+        try {
+            dashboardBackendService.deleteBinding(binding, serviceInstance);
+        } catch(DashboardBackendRequestException ex) {
+            log.error(ex.getMessage());
+            redisClient.set(appId, tmpAppData);
+        }
 
         log.info("Unbinding successful, serviceInstance = " + serviceInstance.getId() +
                 ", bindingId = " + binding.getId());
@@ -122,8 +137,9 @@ public class LogMetricBindingService extends BindingServiceImpl {
                     log.info("Found binding with bindingId = " + binding.getId() + ", synchronizing with Redis...");
 
                     String appId = binding.getAppGuid();
+                    String redisEntry = redisClient.get(appId);
 
-                    if(redisClient.get(appId) == null) {
+                    if(redisEntry.equals("") || !JsonParser.parseString(redisEntry).getAsJsonObject().get("subscribed").getAsBoolean()) {
                         AppData appData = cfUtils.createAppData(appId, binding.getId(), serviceInstance);
                         JsonElement appDataJson = gsonBuilder.toJsonTree(appData);
                         appDataJson.getAsJsonObject().addProperty("subscribed", true);
