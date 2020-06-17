@@ -139,7 +139,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
                     String appId = binding.getAppGuid();
                     String redisEntry = redisClient.get(appId);
 
-                    if(redisEntry.equals("") || !JsonParser.parseString(redisEntry).getAsJsonObject().get("subscribed").getAsBoolean()) {
+                    if(redisEntry == null || redisEntry.equals("") || !JsonParser.parseString(redisEntry).getAsJsonObject().get("subscribed").getAsBoolean()) {
                         AppData appData = cfUtils.createAppData(appId, binding.getId(), serviceInstance);
                         JsonElement appDataJson = gsonBuilder.toJsonTree(appData);
                         appDataJson.getAsJsonObject().addProperty("subscribed", true);
