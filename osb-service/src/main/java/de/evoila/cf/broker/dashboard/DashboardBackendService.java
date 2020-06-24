@@ -2,6 +2,8 @@ package de.evoila.cf.broker.dashboard;
 
 import de.evoila.cf.broker.bean.DashboardBackendPropertyBean;
 import de.evoila.cf.broker.bean.DashboardBackendResponseErrorHandler;
+import de.evoila.cf.broker.dashboard.model.CfAuthScope;
+import de.evoila.cf.broker.dashboard.model.ServiceBrokerBindingRequest;
 import de.evoila.cf.broker.model.AppData;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.ServiceInstanceBinding;
@@ -11,6 +13,9 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+/**
+ * @author Lars Atzinger
+ */
 @Service
 @ConditionalOnBean(DashboardBackendPropertyBean.class)
 public class DashboardBackendService {
@@ -29,10 +34,13 @@ public class DashboardBackendService {
                 .replace(":instanceId", serviceInstance.getId())
                 .replace(":bindingId", bindingId);
 
+        CfAuthScope cfAuthScope = new CfAuthScope(appDataObj);
+        ServiceBrokerBindingRequest bindingRequest = new ServiceBrokerBindingRequest(appDataObj, cfAuthScope);
+
         restTemplate.exchange(
                 uriDashboardBackend,
                 HttpMethod.POST,
-                new HttpEntity<>(appDataObj, getHeadersBasicAuth(authenticationProperties.getUsername(), authenticationProperties.getPassword())),
+                new HttpEntity<>(bindingRequest, getHeadersBasicAuth(authenticationProperties.getUsername(), authenticationProperties.getPassword())),
                 String.class
         );
 
