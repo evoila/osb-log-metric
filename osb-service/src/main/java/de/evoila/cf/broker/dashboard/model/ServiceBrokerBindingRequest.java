@@ -1,14 +1,12 @@
-package de.evoila.cf.broker.model;
+package de.evoila.cf.broker.dashboard.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import de.evoila.cf.broker.model.AppData;
 
 import javax.validation.constraints.NotEmpty;
 
-/**
- * @author Lars Atzinger
- */
-public class AppData {
+public class ServiceBrokerBindingRequest {
 
     @NotEmpty
     @JsonSerialize
@@ -17,8 +15,8 @@ public class AppData {
 
     @NotEmpty
     @JsonSerialize
-    @JsonProperty("instanceId")
-    public String instanceId;
+    @JsonProperty("authScope")
+    public CfAuthScope authScope;
 
     @NotEmpty
     @JsonSerialize
@@ -42,26 +40,25 @@ public class AppData {
 
     @NotEmpty
     @JsonSerialize
-    @JsonProperty("organization_guid")
-    public String organizationGuid;
+    @JsonProperty("type")
+    public String type = "servicebroker";
 
-    @NotEmpty
-    @JsonSerialize
-    @JsonProperty("spaceId")
-    public String spaceId;
-
-    public AppData() {
+    public ServiceBrokerBindingRequest(AppData appData, CfAuthScope authScope){
+        this.bindingId = appData.bindingId;
+        this.authScope = authScope;
+        this.appId = appData.appId;
+        this.appName = appData.appName;
+        this.organization = appData.organization;
+        this.space = appData.space;
     }
 
-    public AppData(@NotEmpty String bindingId, @NotEmpty String instanceId, @NotEmpty String appId, @NotEmpty String appName, @NotEmpty String organization, @NotEmpty String space, @NotEmpty String organizationGuid, @NotEmpty String spaceId) {
+    public ServiceBrokerBindingRequest(@NotEmpty String bindingId, @NotEmpty CfAuthScope authScope, @NotEmpty String appId, @NotEmpty String appName, @NotEmpty String organization, @NotEmpty String space) {
         this.bindingId = bindingId;
-        this.instanceId = instanceId;
+        this.authScope = authScope;
         this.appId = appId;
         this.appName = appName;
         this.organization = organization;
         this.space = space;
-        this.organizationGuid = organizationGuid;
-        this.spaceId = spaceId;
     }
 
     public String getBindingId() {
@@ -72,12 +69,12 @@ public class AppData {
         this.bindingId = bindingId;
     }
 
-    public String getInstanceId() {
-        return instanceId;
+    public CfAuthScope getAuthScope() {
+        return authScope;
     }
 
-    public void setInstanceId(String instanceId) {
-        this.instanceId = instanceId;
+    public void setAuthScope(CfAuthScope authScope) {
+        this.authScope = authScope;
     }
 
     public String getAppId() {
@@ -112,33 +109,24 @@ public class AppData {
         this.space = space;
     }
 
-    public String getOrganizationGuid() {
-        return organizationGuid;
+    public String getType() {
+        return type;
     }
 
-    public void setOrganizationGuid(String organizationGuid) {
-        this.organizationGuid = organizationGuid;
-    }
-
-    public String getSpaceId() {
-        return spaceId;
-    }
-
-    public void setSpaceId(String spaceId) {
-        this.spaceId = spaceId;
+    public void setType(String type) {
+        this.type = type;
     }
 
     @Override
     public String toString() {
-        return "AppData{" +
+        return "ServiceBrokerBindingRequest{" +
                 "bindingId='" + bindingId + '\'' +
-                ", instanceId='" + instanceId + '\'' +
+                ", authScope=" + authScope +
                 ", appId='" + appId + '\'' +
                 ", appName='" + appName + '\'' +
                 ", organization='" + organization + '\'' +
                 ", space='" + space + '\'' +
-                ", organizationGuid='" + organizationGuid + '\'' +
-                ", spaceId='" + spaceId + '\'' +
+                ", type='" + type + '\'' +
                 '}';
     }
 }
