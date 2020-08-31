@@ -90,7 +90,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
         try {
             dashboardBackendService.createBinding(bindingId, serviceInstance, appData);
-        } catch(DashboardBackendRequestException ex) {
+        } catch (DashboardBackendRequestException ex) {
             log.error(ex.getMessage());
             redisClient.del(appId);
         }
@@ -114,7 +114,7 @@ public class LogMetricBindingService extends BindingServiceImpl {
 
         try {
             dashboardBackendService.deleteBinding(binding, serviceInstance);
-        } catch(DashboardBackendRequestException ex) {
+        } catch (DashboardBackendRequestException ex) {
             log.error(ex.getMessage());
             redisClient.set(appId, tmpAppData);
         }
@@ -139,11 +139,13 @@ public class LogMetricBindingService extends BindingServiceImpl {
                     String appId = binding.getAppGuid();
                     String redisEntry = redisClient.get(appId);
 
-                    if(redisEntry == null || redisEntry.equals("") || !JsonParser.parseString(redisEntry).getAsJsonObject().get("subscribed").getAsBoolean()) {
+                    if (redisEntry == null || redisEntry.equals("") || !JsonParser.parseString(redisEntry).getAsJsonObject().get("subscribed").getAsBoolean()) {
                         AppData appData = cfUtils.createAppData(appId, binding.getId(), serviceInstance);
-                        JsonElement appDataJson = gsonBuilder.toJsonTree(appData);
-                        appDataJson.getAsJsonObject().addProperty("subscribed", true);
-                        redisClient.set(appId, gsonBuilder.toJson(appDataJson));
+                        if (appData != null) {
+                            JsonElement appDataJson = gsonBuilder.toJsonTree(appData);
+                            appDataJson.getAsJsonObject().addProperty("subscribed", true);
+                            redisClient.set(appId, gsonBuilder.toJson(appDataJson));
+                        }
                     }
                 });
             });

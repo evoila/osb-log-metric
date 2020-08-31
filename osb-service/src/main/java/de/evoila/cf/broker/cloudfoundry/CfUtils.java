@@ -12,6 +12,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Component
@@ -38,19 +39,18 @@ public class CfUtils {
 
         HttpEntity<String> httpEntity = new HttpEntity<>(getHeadersBearer(uaaTokenRetriever.getoAuthToken()));
 
-        ResponseEntity<String> cloudFoundryResponse = restTemplate.exchange(
-                uriCloudFoundry,
-                HttpMethod.GET,
-                httpEntity,
-                String.class
-        );
-
-        String responseBody = cloudFoundryResponse.getBody();
-        AppData appDataObj = new AppData();
-        appDataObj.setBindingId(bindingId);
-        appDataObj.setInstanceId(serviceInstance.getId());
-
         try {
+            ResponseEntity<String> cloudFoundryResponse = restTemplate.exchange(
+                    uriCloudFoundry,
+                    HttpMethod.GET,
+                    httpEntity,
+                    String.class
+            );
+
+            String responseBody = cloudFoundryResponse.getBody();
+            AppData appDataObj = new AppData();
+            appDataObj.setBindingId(bindingId);
+            appDataObj.setInstanceId(serviceInstance.getId());
 
             JsonNode appData = objectMapper.readTree(responseBody);
             JsonNode appDataSpaces = appData.at("/included/spaces");
@@ -79,11 +79,14 @@ public class CfUtils {
             appDataObj.setOrganization(appDataOrganizationsOrganization.get("name").asText());
             appDataObj.setOrganizationGuid(appDataOrganizationsOrganization.get("guid").asText());
 
-        } catch (Exception e) {
+            return appDataObj;
+        } catch (HttpClientErrorException e) {
+            log.error("Failed to created AppData for Binding " + bindingId + " with AppId " + appId, e);
+        } catch (Exception e){
             log.error("Could not deserialize AppData from json", e);
         }
 
-        return appDataObj;
+        return null;
     }
 
     public HttpHeaders getHeadersBearer(String token) {
