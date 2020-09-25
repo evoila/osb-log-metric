@@ -156,7 +156,7 @@
         <pluginRepository>
             <id>Maven Central</id>
             <name>Central Maven Repository</name>
-            <url>http://repo1.maven.org/maven2/</url>
+            <url>https://repo1.maven.org/maven2/</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
