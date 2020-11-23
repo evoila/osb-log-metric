@@ -7,3 +7,6 @@
 [submodule "osb-core"]
 	path = osb-core
 	url = git@github.com:evoila/cf-service-broker-core.git
+[submodule "logmetric-dashboard"]
+	path = logmetric-dashboard
+	url = git@github.com:evoila/logmetric-dashboard.git

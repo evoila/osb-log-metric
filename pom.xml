@@ -16,7 +16,7 @@
     </parent>
 
     <modules>
-        <module>osb-dashboard</module>
+        <module>logmetric-dashboard</module>
         <module>osb-core</module>
         <module>osb-persistence</module>
         <module>osb-deployment</module>
@@ -26,7 +26,7 @@
     <properties>
         <kafka.version>2.0.0</kafka.version>
         <resource.dir>${basedir}/../osb-service/src/main/resources</resource.dir>
-        <dashboard.module>monitoring</dashboard.module>
+        <dashboard.module>mdash</dashboard.module>
         <spring-cloud.version>Greenwich.RELEASE</spring-cloud.version>
         <java.version>11</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
