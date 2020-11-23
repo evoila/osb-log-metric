@@ -7,6 +7,3 @@
 [submodule "osb-core"]
 	path = osb-core
 	url = git@github.com:evoila/cf-service-broker-core.git
-[submodule "osb-dashboard"]
-	path = osb-dashboard
-	url = git@github.com:evoila/cf-service-broker-dashboard.git
